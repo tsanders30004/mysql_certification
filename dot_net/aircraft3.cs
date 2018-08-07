@@ -104,6 +104,30 @@ public class Example1
                Console.WriteLine(my_scalar_exception.ToString());
           }
 
+          /* stored procedure */
+          try
+          {
+               Console.WriteLine("stored procedure test");
+               my_connection.Open();
+
+               string my_stored_proc = "show_planes";
+               MySqlCommand my_command_stored_proc = new MySqlCommand(my_stored_proc, my_connection);
+               my_command_stored_proc.CommandType = CommandType.StoredProcedure;
+
+               MySqlDataReader my_stored_proc_reader = my_command_stored_proc.ExecuteReader();
+
+               while (my_stored_proc_reader.Read())
+               {
+                    Console.WriteLine(my_stored_proc_reader[0] + "\t" + my_stored_proc_reader[1] + "\t" + my_stored_proc_reader[2]  );
+               }
+
+               my_connection.Close();
+          }
+          catch
+          {
+
+          }
+
           Console.WriteLine("done.  mysql closed.\n");
      }
 }
