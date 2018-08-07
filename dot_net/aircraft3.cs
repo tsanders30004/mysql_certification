@@ -138,13 +138,59 @@ public class Example1
 
           /* prepared statement example */
           my_connection.Open();
+          string my_prepared_statement = "INSERT INTO planes(manf, model) VALUES (@manf, @model)";
           MySqlCommand my_prepared_statement_command = new MySqlCommand();
-          my_prepared_statement_command.CommandText = "INSERT INTO planes(manf, model) VALUES (@manf, @model)";
+
+          my_prepared_statement_command.CommandText = my_prepared_statement;
+          my_prepared_statement_command.Connection = my_connection;
+
           my_prepared_statement_command.Prepare();
           my_prepared_statement_command.Parameters.AddWithValue("@manf", "Boeing");
-          my_prepared_statement_command.Parameters.AddWithValue("@model", "747");
+          my_prepared_statement_command.Parameters.AddWithValue("@model", "994");
           my_prepared_statement_command.ExecuteNonQuery();
           my_connection.Close();
+
+          /* a different way to do SELECT * */
+          Console.WriteLine("demo 1");
+          my_connection.Open();
+          MySqlCommand demo_command_1   = new MySqlCommand();
+          demo_command_1.Connection     = my_connection;
+          demo_command_1.CommandType    = CommandType.TableDirect;
+          demo_command_1.CommandText    = "planes";
+          MySqlDataReader demo1_reader  = demo_command_1.ExecuteReader();
+          while(demo1_reader.Read())
+          {
+               Console.WriteLine(demo1_reader[0] + "\t" +demo1_reader[1] + "\t" + demo1_reader[2] + "\t" + demo1_reader[3]);
+          }
+          my_connection.Close();
+
+          /* alternate way for stored procesure */
+          Console.WriteLine("demo 2");
+          my_connection.Open();
+          MySqlCommand demo_command_2   = new MySqlCommand();
+          demo_command_2.Connection     = my_connection;
+          demo_command_2.CommandType    = CommandType.StoredProcedure;
+          demo_command_2.CommandText    = "show_one_plane";
+          demo_command_2.Parameters.AddWithValue("@plane", "767");
+          MySqlDataReader demo2_reader  = demo_command_2.ExecuteReader();
+          while(demo2_reader.Read())
+          {
+               Console.WriteLine(demo2_reader[0] + "\t" +demo2_reader[1] + "\t" + demo2_reader[2] + "\t" + demo2_reader[3]);
+          }
+          my_connection.Close();
+
+          /* alternate delete */
+          Console.WriteLine("demo 3");
+          my_connection.Open();
+          MySqlCommand demo_command_3   = new MySqlCommand();
+          demo_command_3.Connection     = my_connection;
+          demo_command_3.CommandType    = CommandType.Text;
+          demo_command_3.CommandText    = "delete from planes";
+          demo_command_3.ExecuteNonQuery();
+          /* the following works too; i.e., with this method, ExecuteNonQuery and ExecuteReader function the same */
+          /* demo_command_3.ExecuteReader(); */
+          my_connection.Close();
+
           /* end of demo */
           Console.WriteLine("done.  mysql closed.\n");
      }
