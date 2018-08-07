@@ -1,0 +1,785 @@
+Chapter 5 Data Types
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+5.1 Data Type Overview
+
+DROP TABLE IF EXISTS people;
+CREATE TABLE people
+(
+    id         INT,
+    first_name CHAR(30),
+    last_name  CHAR(30)
+);
+
+DROP TABLE IF EXISTS people;
+CREATE TABLE people
+(
+    id         INT UNSIGNED NOT NULL,
+    first_name CHAR(30) NOT NULL,
+    last_name  CHAR(30) NOT NULL
+);
+
+5.4.1 Character Set Support
+
+SHOW COLLATION LIKE 'latin1%';
+
+SELECT UPPER('AaBb'), UPPER(BINARY 'AaBb');
+
+DROP TABLE IF EXISTS auth_info;
+CREATE TABLE auth_info
+(
+    login    CHAR(32) CHARACTER SET latin1,
+    password CHAR(32) CHARACTER SET latin1 COLLATE latin1_general_cs,
+    picture  MEDIUMBLOB
+);
+
+5.4.4 The ENUM and SET Data Types
+
+DROP TABLE IF EXISTS booleans;
+CREATE TABLE booleans
+(
+ yesno     ENUM('Y','N'),
+ truefalse ENUM('T','F')
+);
+
+DROP TABLE IF EXISTS booleans;
+CREATE TABLE booleans
+(
+ yesno     ENUM('yes','no'),
+ truefalse ENUM('true','false')
+);
+
+DROP TABLE IF EXISTS Countries;
+CREATE TABLE Countries
+(
+    name char(30),
+    continent ENUM ('Asia','Europe','North America','Africa',
+                    'Oceania','Antarctica','South America')
+);
+
+INSERT INTO Countries (name,continent) VALUES('Kenya','Africa');
+
+DROP TABLE IF EXISTS allergy;
+CREATE TABLE allergy
+(
+    symptom SET('sneezing','runny nose','stuffy head','red eyes')
+);
+
+INSERT INTO allergy (symptom) VALUES('');
+INSERT INTO allergy (symptom) VALUES('stuffy head');
+INSERT INTO allergy (symptom) VALUES('sneezing,red eyes');
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (age INT, siblings ENUM('0','1','2','3','>3'));
+
+INSERT INTO t (age,siblings) VALUES(14,'3');
+
+INSERT INTO t (age,siblings) VALUES(14,3);
+
+SELECT * FROM t WHERE siblings = '3';
+SELECT * FROM t WHERE siblings = 3;
+
+5.5.2 The TIMESTAMP Data Type
+
+DROP TABLE IF EXISTS ts_test1;
+CREATE TABLE ts_test1 (
+  ts1 TIMESTAMP,
+  ts2 TIMESTAMP,
+  data CHAR(30)
+);
+
+DESCRIBE ts_test1;
+
+INSERT INTO ts_test1 (data) VALUES ('original_value');
+
+SELECT * FROM ts_test1;
+
+... time passes ...
+
+UPDATE ts_test1 SET data='updated_value';
+
+SELECT * FROM ts_test1;
+
+
+DROP TABLE IF EXISTS ts_test2;
+CREATE TABLE ts_test2 (
+  created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  data CHAR(30)
+);
+
+INSERT INTO ts_test2 (data) VALUES ('original_value');
+
+SELECT * FROM ts_test2;
+
+... time passes ...
+
+UPDATE ts_test2 SET data='updated_value';
+
+SELECT * FROM ts_test2;
+
+DROP TABLE IF EXISTS ts_test3;
+CREATE TABLE ts_test3 (
+  updated_time TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  data CHAR(30)
+);
+
+INSERT INTO ts_test3 (data) VALUES ('original_value');
+
+SELECT * FROM ts_test3;
+
+UPDATE ts_test3 SET data='updated_value';
+
+SELECT * FROM ts_test3;
+
+DROP TABLE IF EXISTS ts_test4;
+CREATE TABLE ts_test4 (
+  created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  data CHAR(30)
+);
+
+DROP TABLE IF EXISTS ts_test5;
+CREATE TABLE ts_test5 (
+  created TIMESTAMP DEFAULT 0,
+  updated TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  data CHAR(30)
+);
+
+INSERT INTO ts_test5 (created, data)
+VALUES (NULL, 'original_value');
+
+SELECT * FROM ts_test5;
+
+... time passes ...
+
+UPDATE ts_test5 SET data='updated_value';
+
+SELECT * FROM ts_test5;
+
+DROP TABLE IF EXISTS ts_null; 
+CREATE TABLE ts_null (ts TIMESTAMP NULL);
+
+DESCRIBE ts_null;
+
+5.5.3 Per-Connection Time Zone Support
+
+SELECT @@global.time_zone, @@session.time_zone;
+
+SET time_zone = '+00:00';
+
+SELECT @@session.time_zone;
+
+DROP TABLE IF EXISTS ts_test;
+SET time_zone = '+00:00';
+CREATE TABLE ts_test (ts TIMESTAMP);
+
+INSERT INTO ts_test (ts) VALUES (NULL);
+
+SELECT * FROM ts_test;
+
+SET time_zone = '+02:00';
+
+SELECT * FROM ts_test;
+
+SET time_zone = '-05:00';
+
+SELECT * FROM ts_test;
+
+SELECT CONVERT_TZ('2005-01-27 13:30:00', '+01:00', '+03:00');
+
+5.6 Column Attributes
+
+CREATE TABLE t
+(
+    i INT UNSIGNED NOT NULL,
+    c CHAR(10) CHARACTER SET utf8,
+    d DATE DEFAULT '1999-12-31'
+);
+
+5.6.3 General Column Attributes
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT NOT NULL PRIMARY KEY);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT NOT NULL, PRIMARY KEY (i));
+
+5.7 Using the AUTO_INCREMENT Column Attribute
+
+DROP TABLE IF EXISTS attendee;
+CREATE TABLE attendee
+(
+    att_id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    att_name    CHAR(100),
+    att_title   CHAR(40),
+    PRIMARY KEY (att_id)
+);
+
+DROP TABLE IF EXISTS seminar;
+CREATE TABLE seminar
+(
+    att_id     INT UNSIGNED NOT NULL,
+    sem_title  ENUM('Database Design','Query Optimization',
+                    'SQL Standards','Using Replication'),
+    INDEX (att_id)
+);
+
+(rig the example so that the first record has an ID of 3)
+
+ALTER TABLE attendee AUTO_INCREMENT = 3;
+
+INSERT INTO attendee (att_name,att_title)
+VALUES('Charles Loviness','IT Manager');
+
+SELECT * FROM attendee WHERE att_id = LAST_INSERT_ID();
+
+INSERT INTO seminar (att_id,sem_title)
+VALUES(LAST_INSERT_ID(),'Database Design');
+INSERT INTO seminar (att_id,sem_title)
+VALUES(LAST_INSERT_ID(),'SQL Standards');
+INSERT INTO seminar (att_id,sem_title)
+VALUES(LAST_INSERT_ID(),'Using Replication');
+
+SELECT * FROM seminar WHERE att_id = LAST_INSERT_ID();
+
+INSERT INTO t (id,name) VALUES(NULL,'Hans');
+INSERT INTO t (name) VALUES('Hans');
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (id INT AUTO_INCREMENT, PRIMARY KEY (id));
+INSERT INTO t (id) VALUES(NULL),(NULL),(17),(NULL),(NULL);
+SELECT id FROM t;
+
+DROP TABLE IF EXISTS multisequence;
+CREATE TABLE multisequence
+(
+    name     CHAR(10) NOT NULL,
+    name_id  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (name, name_id)
+);
+
+INSERT INTO multisequence (name)
+VALUES('Petr'),('Ilya'),('Ilya'),('Yuri'),('Ilya'),('Petr');
+SELECT * FROM multisequence ORDER BY name, name_id;
+
+5.8 Handling Missing or Invalid Data Values
+
+SET sql_mode = '';
+
+SET sql_mode = 'STRICT_TRANS_TABLES';
+SET sql_mode = 'STRICT_ALL_TABLES';
+
+SET sql_mode = 'TRADITIONAL';
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT);
+
+INSERT INTO t (i) VALUES(43);
+INSERT INTO t (i) VALUES('43');
+
+INSERT INTO t (i) VALUES('43x');
+
+5.8.1 Handling Missing Values
+
+CREATE TABLE t
+(
+    i INT NULL,
+    j INT NOT NULL,
+    k INT DEFAULT -1
+);
+
+INSERT INTO t (i) VALUES(0);
+INSERT INTO t (i,k) VALUES(1,2);
+INSERT INTO t (i,k) VALUES(1,2),(3,4);
+INSERT INTO t VALUES();
+
+SHOW CREATE TABLE t\G
+
+5.8.4 Enabling Additional Input Data Restrictions
+
+SET sql_mode = 'STRICT_ALL_TABLES,ERROR_FOR_DIVISION_BY_ZERO';
+
+SET sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE';
+
+SET sql_mode = 'TRADITIONAL';
+
+5.8.5 Overriding Input Data Restrictions
+
+SET sql_mode = 'ALLOW_INVALID_DATES';
+
+SET sql_mode = 'STRICT_ALL_TABLES,ALLOW_INVALID_DATES';
+
+5.9 Exercises
+
+Question 8:
+
+DROP TABLE IF EXISTS datetest;
+CREATE TABLE datetest (d DATE NULL);
+
+INSERT INTO datetest VALUES ('10-02-08');
+
+INSERT INTO datetest VALUES ('69-12-31');
+
+INSERT INTO datetest VALUES ('70-01-01');
+
+Question 9:
+
+INSERT INTO datetest VALUES ('12:00:00');
+
+Answer 9:
+
+INSERT INTO datetest VALUES ('12:00:00');
+
+SET sql_mode = '';
+
+INSERT INTO datetest VALUES ('12:00:00');
+
+SELECT d FROM datetest;
+
+Answer 19:
+
+DROP TABLE IF EXISTS timestamptest;
+CREATE TABLE timestamptest (
+ ts1 TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ i INT
+);
+
+Question 20:
+
+DROP TABLE IF EXISTS timestamptest;
+CREATE TABLE timestamptest (
+ ts1 TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ i INT
+);
+
+INSERT INTO timestamptest SET ts1=NULL, i=10;
+INSERT INTO timestamptest SET ts1=0, i=11;
+INSERT INTO timestamptest SET ts1='', i=12;
+
+Answer 20:
+
+SELECT ts1, i FROM timestamptest;
+
+Question 21:
+
+SELECT CONCAT(1,1+1);
+
+Answer 25:
+
+SELECT @@global.time_zone, @@session.time_zone;
+
+SET SESSION time_zone = '+01:00';
+
+SELECT @@session.time_zone;
+
+Question 26:
+
+DROP TABLE IF EXISTS ts_tz_test;
+CREATE TABLE ts_tz_test (ts TIMESTAMP);
+
+SELECT NOW(); INSERT INTO ts_tz_test VALUES (NOW());
+
+SELECT ts FROM ts_tz_test;
+
+SET time_zone = '+05:00';
+
+SELECT ts FROM ts_tz_test;
+
+Question 27:
+
+DROP TABLE IF EXISTS myauto;
+CREATE TABLE myauto (id INT NOT NULL AUTO_INCREMENT
+PRIMARY KEY);
+
+DESCRIBE myauto;
+
+INSERT INTO myauto (id) VALUES (NULL);
+
+Question 28:
+
+DROP TABLE IF EXISTS cliptest;
+CREATE TABLE cliptest (number INT, string VARCHAR(255));
+
+DESCRIBE cliptest;
+SELECT * FROM cliptest;
+
+ALTER TABLE cliptest
+ MODIFY number TINYINT UNSIGNED NOT NULL,
+ MODIFY string TINYINT UNSIGNED NOT NULL
+;
+
+Answer 28:
+
+SELECT * FROM cliptest;
+
+Question 29:
+
+DROP TABLE IF EXISTS nulltest;
+CREATE TABLE nulltest (
+ test1 INT NOT NULL,
+ test2 INT NULL,
+ test3 INT NOT NULL DEFAULT 123,
+ test4 INT NULL DEFAULT 456
+);
+
+Answer 29:
+
+DROP TABLE IF EXISTS nulltest;
+CREATE TABLE nulltest (
+ test1 INT NOT NULL,
+ test2 INT NULL,
+ test3 INT NOT NULL DEFAULT 123,
+ test4 INT NULL DEFAULT 456
+);
+DESCRIBE nulltest;
+
+Answer 33:
+
+DROP TABLE IF EXISTS updates;
+CREATE TABLE updates (
+  created TIMESTAMP DEFAULT 0,
+  updated TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  data CHAR(30)
+);
+
+INSERT INTO updates (created, updated, data)
+VALUES (NULL, NULL, 'original_value');
+
+SELECT * FROM updates;
+
+UPDATE updates SET data='updated_value';
+
+SELECT * FROM updates;
+
+Question 34:
+
+DROP TABLE IF EXISTS timestamps;
+CREATE TABLE timestamps (
+ ts TIMESTAMP
+);
+SET time_zone = '+00:00';
+INSERT INTO timestamps VALUES ('2005-03-27 13:30:00');
+SELECT * FROM timestamps;
+
+Answer 34:
+
+SET time_zone = '-05:00';
+
+SELECT * FROM timestamps;
+
+Question 35:
+
+DROP TABLE IF EXISTS timestamps;
+CREATE TABLE timestamps (
+ ts TIMESTAMP
+);
+SET time_zone = '+00:00';
+INSERT INTO timestamps VALUES ('2005-04-02 06:45:00');
+SELECT * FROM timestamps;
+
+SET time_zone = '-05:00';
+SELECT * FROM timestamps;
+
+Answer 35:
+
+Question 36:
+
+DROP TABLE IF EXISTS string_test;
+CREATE TABLE string_test (t CHAR(2));
+SET sql_mode = 'STRICT_TRANS_TABLES';
+
+INSERT INTO string_test VALUES
+('far too long for this column'),('OK');
+INSERT INTO string_test VALUES
+('OK'),('far too long for this column');
+
+Answer 36:
+
+INSERT INTO string_test VALUES
+('OK'),('far too long for this column');
+
+Question 37:
+
+
+CREATE TABLE test_i
+(c1 INT(4) UNSIGNED, c2 INT(4) UNSIGNED ZEROFILL);
+
+INSERT INTO test_i (c1, c2)
+VALUES (1,1), (10000,10000);
+
+Answer 37:
+
+SELECT c1, c2 FROM test_i;
+
+Question 38:
+
+DROP TABLE IF EXISTS typetest;
+CREATE TABLE typetest
+(number TINYINT UNSIGNED, string CHAR(5), dates DATE);
+
+DESCRIBE typetest;
+
+INSERT INTO typetest VALUES (1,22,333);
+
+Question 39:
+
+DROP TABLE IF EXISTS typetest;
+CREATE TABLE typetest
+(number TINYINT UNSIGNED, string CHAR(5), dates DATE);
+
+DESCRIBE typetest;
+
+INSERT INTO typetest VALUES (1000,'yoodoo','999-12-31');
+
+Question 40:
+
+DROP TABLE IF EXISTS typetest;
+CREATE TABLE typetest
+(number TINYINT UNSIGNED, string CHAR(5), dates DATE);
+
+DESCRIBE typetest;
+
+INSERT INTO typetest VALUES (NULL,NULL,NULL);
+
+Question 41:
+
+DROP TABLE IF EXISTS typetest;
+CREATE TABLE typetest
+(number TINYINT UNSIGNED, string CHAR(5), dates DATE);
+
+DESCRIBE typetest;
+
+INSERT INTO typetest VALUES ('string',5+5,'string');
+
+Question 42:
+
+DROP TABLE IF EXISTS typetest;
+CREATE TABLE typetest
+(number TINYINT UNSIGNED, string CHAR(5), dates DATE);
+
+DESCRIBE typetest;
+
+INSERT INTO typetest VALUES (-1,-1,'2000-02-32');
+
+Answer 43:
+
+SHOW COLLATION LIKE 'hebrew%';
+
+Question 46:
+
+DROP TABLE IF EXISTS timestamptest;
+CREATE TABLE timestamptest (
+ ts1 TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ i INT
+);
+
+Answer 46:
+
+ALTER TABLE timestamptest
+ MODIFY ts1 TIMESTAMP NULL
+DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+;
+
+INSERT INTO timestamptest (ts1, i) VALUES (NULL, 10);
+
+SELECT ts1, i FROM timestamptest;
+
+Question 47:
+
+DROP TABLE IF EXISTS datetimetest;
+CREATE TABLE datetimetest (dt DATETIME NULL);
+
+DESCRIBE datetimetest;
+
+DELETE FROM datetimetest;
+INSERT INTO datetimetest VALUES (NULL);
+SELECT * FROM datetimetest;
+
+Question 48:
+
+DELETE FROM datetimetest;
+INSERT INTO datetimetest VALUES ('string');
+SELECT * FROM datetimetest;
+
+Question 49:
+
+DELETE FROM datetimetest;
+INSERT INTO datetimetest VALUES (200202082139);
+SELECT * FROM datetimetest;
+
+Question 50:
+
+DELETE FROM datetimetest;
+INSERT INTO datetimetest VALUES (20020208213900);
+SELECT * FROM datetimetest;
+
+Question 51:
+
+DELETE FROM datetimetest;
+INSERT INTO datetimetest VALUES ('2002-02-31 23:59:59');
+SELECT * FROM datetimetest;
+
+Question 52:
+
+DELETE FROM datetimetest;
+INSERT INTO datetimetest VALUES ('2002-02-28 23:59:60');
+SELECT * FROM datetimetest;
+
+Question 53:
+
+SELECT CONCAT(NULL,'Lennart');
+
+Question 54:
+
+SELECT CONCAT(1,' plus ',1,' equals ',2);
+
+Question 55:
+
+SELECT 1 + 1 + ' equals 2';
+
+Question 56:
+
+SELECT 1 + 1 + '1.1 equals GUESS!';
+
+Question 57:
+
+SELECT 1 + NULL;
+
+Question 58:
+
+DROP TABLE IF EXISTS continent;
+CREATE TABLE continent (
+name ENUM('Africa','America','Antarctica','Asia','Australia','Europe')
+);
+
+DESCRIBE continent\G
+
+INSERT INTO continent VALUES ('Africa');
+
+Question 59:
+
+INSERT INTO continent VALUES ('Europa');
+
+Question 60:
+
+INSERT INTO continent VALUES ('');
+
+Question 61:
+
+INSERT INTO continent VALUES (0);
+
+Question 62:
+
+INSERT INTO continent VALUES (1);
+
+Question 63:
+
+INSERT INTO continent VALUES ('1');
+
+Question 64:
+
+INSERT INTO continent VALUES (NULL);
+
+Question 65:
+
+DROP TABLE IF EXISTS defaults;
+CREATE TABLE defaults (
+ id INT UNSIGNED NOT NULL UNIQUE,
+ col1 INT NULL,
+ col2 INT NOT NULL,
+ col3 INT DEFAULT 42,
+ col4 CHAR(5) NULL,
+ col5 CHAR(5) NOT NULL,
+ col6 CHAR(5) DEFAULT 'yoo',
+ col7 TEXT NULL,
+ col8 TEXT NOT NULL,
+ col9 TIME NOT NULL,
+ col10 DATE NULL,
+ col11 DATE NOT NULL,
+ col12 DATE DEFAULT '2002-02-08',
+ col13 ENUM('doo','yoo'),
+ col14 SET('blabla','yooyoo'),
+ col15 ENUM('doo','yoo') NOT NULL,
+ col16 SET('blabla','yooyoo') NOT NULL
+);
+
+INSERT INTO defaults (id) VALUES (1);
+
+Answer 65:
+
+SELECT * FROM defaults\G
+
+Question 66:
+
+DELETE FROM defaults;
+INSERT INTO defaults (id) VALUES (1);
+
+Answer 66:
+
+SELECT * FROM defaults\G
+
+Question 67:
+
+DELETE FROM defaults;
+INSERT INTO defaults (id) VALUES (1);
+
+Answer 67:
+
+SELECT * FROM defaults\G
+
+Question 68:
+
+DELETE FROM defaults;
+INSERT INTO defaults (id) VALUES (1);
+
+Answer 68:
+
+SELECT * FROM defaults\G
+
+Question 69:
+
+DELETE FROM defaults;
+INSERT INTO defaults (id) VALUES (1);
+
+Answer 69:
+
+SELECT * FROM defaults\G
+
+Question 70:
+
+DELETE FROM defaults;
+INSERT INTO defaults (id) VALUES (1);
+
+Answer 70:
+
+SELECT * FROM defaults\G
+
+Question 71:
+
+DELETE FROM defaults;
+INSERT INTO defaults (id) VALUES (1);
+
+Answer 71:
+
+SELECT * FROM defaults\G
+
+Question 72:
+
+DROP TABLE IF EXISTS mytiny;
+CREATE TABLE mytiny (id TINYINT NOT NULL AUTO_INCREMENT
+PRIMARY KEY);
+
+DESCRIBE mytiny;
+

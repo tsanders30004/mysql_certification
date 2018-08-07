@@ -1,0 +1,67 @@
+Chapter 28 Locking
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+28.1 Locking Concepts
+
+28.2 Explicit Table Locking
+
+LOCK TABLES Country READ, City WRITE;
+
+28.3 Advisory Locking
+
+SELECT GET_LOCK('my lock', 5);
+
+SELECT RELEASE_LOCK('my lock');
+
+28.4 Exercises
+
+Answer 8:
+
+SELECT IS_FREE_LOCK('app lock');
+
+SELECT GET_LOCK('app lock', 10);
+
+SELECT RELEASE_LOCK('app lock');
+
+Answer 9:
+
+LOCK TABLES City READ;
+SELECT * FROM City LIMIT 1;
+
+Answer 10:
+
+INSERT INTO City (ID, name) VALUES (10000, 'Test City');
+
+Answer 11:
+
+INSERT INTO City (ID, name) VALUES (10000, 'Test City');
+
+(nothing happens here until the first client releases the lock)
+
+Question 14:
+
+LOCK TABLES City READ; LOCK TABLES Country WRITE;
+
+Answer 14:
+
+LOCK TABLES City READ, Country WRITE;
+
+Answer 15:
+
+SELECT * FROM City limit 1;
+
+Answer 16:
+
+UNLOCK TABLES;

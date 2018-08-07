@@ -1,0 +1,108 @@
+Chapter 17 Prepared Statements
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+17.2 Using Prepared Statements from the mysql Client
+
+PREPARE my_stmt FROM
+'SELECT COUNT(*) FROM CountryLanguage WHERE CountryCode = ?';
+
+SET @code = 'ESP'; EXECUTE my_stmt USING @code;
+
+SET @code = 'RUS'; EXECUTE my_stmt USING @code;
+
+DEALLOCATE PREPARE my_stmt;
+
+17.3 Preparing a Statement
+
+PREPARE namepop FROM '
+SELECT Name, Population
+FROM Country
+WHERE Code = ?
+';
+
+PREPARE error FROM '
+SELECT NonExistingColumn
+FROM Country
+WHERE Code = ?
+';
+
+17.4 Executing a Prepared Statement
+
+PREPARE namepop FROM '
+SELECT Name, Population
+FROM Country
+WHERE Code = ?
+';
+
+SET @var1 = 'USA';
+
+EXECUTE namepop USING @var1;
+
+SET @var2 = 'GBR';
+
+EXECUTE namepop USING @var2;
+
+SELECT @var3 := 'CAN';
+
+EXECUTE namepop USING @var3;
+
+EXECUTE namepop USING @var4;
+
+17.5 Deallocating Prepared Statements
+
+DEALLOCATE PREPARE namepop;
+
+17.6 Exercises
+
+Question 2:
+
+PREPARE s1 FROM 'SELECT 1';
+PREPARE s2 FROM 'SELECT 2';
+PREPARE s1 FROM 'SELECT (1+2';
+
+Question 3:
+
+PREPARE s1 FROM 'SELECT Name, Population
+FROM Country WHERE Continent = ?';
+
+PREPARE s1 FROM 'SELECT NOW()';
+
+Answer 4:
+
+PREPARE spop FROM 'SELECT Name, Population
+FROM Country
+WHERE Continent = ? AND Population > ?';
+
+SET @c = 'Asia', @p = 100000000;
+
+EXECUTE spop USING @c, @p;
+
+Question 5:
+
+PREPARE s1 FROM 'SELECT Name, Population
+FROM Country WHERE Continent = ?';
+
+SET @c = 'South America';
+EXECUTE s1 USING @c;
+
+Answer 6:
+
+DEALLOCATE PREPARE my_stmt;
+
+Answer 8:
+
+PREPARE my_time FROM 'SELECT NOW()';
+
+EXECUTE my_time;

@@ -1,0 +1,65 @@
+Chapter 21 Debugging MySQL Applications
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+21.1 Interpreting Error Messages
+
+SELECT * FROM no_such_table;
+
+DROP TABLE IF EXISTS integers;
+CREATE TABLE integers (i INT UNSIGNED NOT NULL);
+
+INSERT INTO integers VALUES ('abc'), (-5), (NULL);
+
+CREATE TABLE CountryCopy SELECT * FROM Country;
+
+21.2 The SHOW WARNINGS Statement
+
+DROP TABLE IF EXISTS integers;
+CREATE TABLE integers (i INT UNSIGNED NOT NULL);
+
+INSERT INTO integers VALUES ('abc'), (-5), (NULL);
+
+SHOW WARNINGS\G
+
+DROP TABLE IF EXISTS integers;
+CREATE TABLE integers (i INT UNSIGNED NOT NULL);
+INSERT INTO integers VALUES ('abc'), (-5), (NULL);
+
+SHOW WARNINGS LIMIT 1,2\G
+
+SHOW COUNT(*) WARNINGS;
+
+SELECT * FROM no_such_table;
+SHOW WARNINGS;
+
+DROP TABLE IF EXISTS no_such_table;
+
+SHOW WARNINGS;
+
+SET sql_notes = 0;
+
+21.4 The perror Utility
+
+CREATE TABLE CountryCopy SELECT * FROM Country;
+
+perror 13
+
+21.5 Exercises
+
+Answer 4:
+
+SHOW WARNINGS LIMIT 0, 1;
+
+SET sql_notes = 0;

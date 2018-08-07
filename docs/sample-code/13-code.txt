@@ -1,0 +1,525 @@
+Chapter 13 Subqueries
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+13.1 Types of Subqueries
+
+SELECT Language
+FROM CountryLanguage
+WHERE CountryCode = (SELECT Code
+                     FROM Country
+                     WHERE Name='Finland');
+
+SELECT Country.Name
+FROM   Country, City
+WHERE  Country.Code = City.CountryCode
+  AND  City.Population = (SELECT MAX(Population)
+                          FROM City);
+
+13.2 Subqueries as Scalar Expressions
+
+SELECT CONCAT('The country code for Finland is: ', 
+             (SELECT Code
+              FROM Country
+              WHERE Name='Finland')) AS s1;
+
+SELECT (SELECT SUM(Population) FROM City) /
+       (SELECT SUM(Population) FROM Country) AS ratio;
+
+SET @city_pop = (SELECT SUM(Population) FROM City);
+SET @country_pop = (SELECT SUM(Population) FROM Country);
+SELECT @city_pop / @country_pop;
+
+13.3 Correlated Subqueries
+
+SELECT Continent, Name, Population
+FROM Country c
+WHERE Population = (SELECT MAX(Population)
+                    FROM Country c2
+                    WHERE c.Continent=c2.Continent
+                    AND Population > 0
+                   );
+
+13.4 Comparing Subquery Results to Outer Query Columns
+
+SELECT Code c, Name
+FROM Country
+WHERE 100 > (SELECT Population
+             FROM City
+             WHERE CountryCode = c);
+
+13.4.1 Using ALL, ANY, and SOME
+
+SELECT Continent, AVG(Population)
+FROM Country
+GROUP BY Continent;
+
+SELECT Name, Population
+FROM Country
+WHERE Population > ALL (SELECT AVG(Population)
+                        FROM Country
+                        GROUP BY Continent)
+ORDER BY Name;
+
+SELECT Name
+FROM Country
+WHERE Population > ALL (SELECT Continent, AVG(Population)
+                        FROM Country
+                        GROUP BY Continent)
+ORDER BY Name;
+
+SELECT Name
+FROM Country
+WHERE Continent = 'Europe'
+  AND Code = ANY (SELECT CountryCode
+                  FROM CountryLanguage
+                  WHERE Language = 'Spanish')
+ORDER BY Name;
+
+SELECT Name
+FROM Country
+WHERE Continent = 'Europe'
+  AND Code = ALL (SELECT CountryCode
+                  FROM CountryLanguage
+                  WHERE Language = 'Spanish')
+ORDER BY Name;
+
+SELECT Name
+FROM Country
+WHERE Continent = 'Europe'
+  AND Code <> ANY (SELECT CountryCode
+                   FROM CountryLanguage
+                   WHERE Language = 'Spanish')
+ORDER BY Name;
+
+13.4.2 Using IN
+
+SELECT Name
+FROM Country
+WHERE Code IN ('DEU', 'USA', 'JPN');
+
+SELECT Name
+FROM Country
+WHERE Continent = 'Europe'
+  AND Code IN (SELECT CountryCode
+               FROM CountryLanguage
+               WHERE Language = 'Spanish')
+ORDER BY Name;
+
+13.4.3 Using EXISTS
+
+SELECT Code c, Name
+FROM Country
+WHERE Continent = 'Europe'
+  AND EXISTS (SELECT *
+              FROM CountryLanguage
+              WHERE CountryCode = c
+                AND Language = 'Spanish');
+
+13.5 Comparison Using Row Subqueries
+
+SELECT City.Name
+FROM City
+WHERE (City.ID, City.CountryCode) =
+      (SELECT Capital, Code
+       FROM Country
+       WHERE Name='Finland');
+
+SELECT City.Name
+FROM City
+WHERE (City.ID, City.CountryCode) =
+      (SELECT Capital, Code
+       FROM Country);
+
+SELECT Name, Population
+FROM Country
+WHERE (Continent, Region) = ('Europe', 'Western Europe');
+
+SELECT Name, Population
+FROM Country
+WHERE Continent = 'Europe' AND Region = 'Western Europe';
+
+13.6 Using Subqueries in the FROM Clause
+
+SELECT AVG(cont_sum)
+FROM (SELECT Continent, SUM(Population) AS cont_sum
+      FROM Country
+      GROUP BY Continent
+     ) AS t;
+
+13.7.1 Converting Subqueries to Inner Joins
+
+SELECT Name FROM Country
+WHERE Code IN (SELECT CountryCode FROM CountryLanguage);
+
+SELECT Name FROM Country, CountryLanguage
+WHERE Code = CountryCode;
+
+SELECT DISTINCT Name FROM Country, CountryLanguage
+WHERE Code = CountryCode;
+
+13.7.2 Converting Subqueries to Outer Joins
+
+SELECT Name FROM Country
+WHERE Code NOT IN (SELECT CountryCode FROM CountryLanguage);
+
+SELECT Name
+FROM Country LEFT JOIN CountryLanguage ON Code = CountryCode
+WHERE CountryCode IS NULL;
+
+SELECT Name
+FROM CountryLanguage RIGHT JOIN Country ON CountryCode = Code
+WHERE CountryCode IS NULL;
+
+13.8 Using Subqueries in Updates
+
+DROP TABLE IF EXISTS NACities;
+CREATE TABLE NACities
+SELECT * FROM City
+WHERE CountryCode IN (SELECT Code
+                      FROM Country
+                      WHERE Continent='North America');
+
+DELETE FROM NACities
+WHERE CountryCode IN (SELECT Code
+                      FROM Country
+                      WHERE LifeExpectancy < 70.0);
+
+DELETE FROM NACities
+WHERE ID IN (SELECT ID
+             FROM NACities
+             WHERE Population < 500);
+
+13.9 Exercises
+
+Question 2:
+
+SELECT DISTINCT Continent 
+FROM Country 
+WHERE Code IN (SELECT CountryCode 
+               FROM CountryLanguage 
+               WHERE Language='English' 
+                 AND Percentage>50
+              );  
+
+Question 3:
+
+SELECT * FROM Country
+WHERE Continent = 'South America'
+AND Population = (SELECT MIN(Population) FROM Country
+                  WHERE Continent = 'South America');
+
+Answer 3:
+
+SELECT * FROM Country c1
+WHERE Continent = 'South America'
+AND Population = (SELECT MIN(Population) FROM Country c2
+                  WHERE c2.Continent = c1.Continent);
+
+Question 4:
+
+SELECT Continent, Name 
+FROM Country c1
+WHERE Population >= ALL (SELECT Population
+                         FROM Country c2
+                         WHERE c1.Continent=c2.Continent
+                        );
+
+Question 5:
+
+SELECT Continent, Name 
+FROM Country
+WHERE SurfaceArea > ANY (SELECT AVG(SurfaceArea)
+                         FROM Country
+                         GROUP BY Continent
+                        );
+
+Answer 6:
+
+SELECT Continent C, Name, SurfaceArea
+FROM Country
+WHERE SurfaceArea = (
+ SELECT MAX(SurfaceArea)
+ FROM Country
+ WHERE Continent = C);
+
+Answer 7:
+
+SELECT DISTINCT Language
+FROM CountryLanguage
+WHERE CountryCode IN (
+ SELECT Code
+ FROM Country
+ Where GovernmentForm = 'Monarchy')
+ORDER BY Language;
+
+Answer 8:
+
+SELECT Code c, Name
+FROM Country
+WHERE EXISTS (SELECT *
+              FROM CountryLanguage
+              WHERE CountryCode = c
+              AND Language = 'German')
+ORDER BY Name;
+
+Answer 9:
+
+SELECT Population
+FROM City
+WHERE (Name, District, CountryCode) = ('Houston', 'Texas', 'USA');
+
+Answer 10:
+
+SELECT SUM(Speakers)
+FROM (SELECT (Population * Percentage) / 100 AS Speakers
+      FROM CountryLanguage cl, Country c
+      WHERE cl.CountryCode = c.Code
+        AND c.Region = 'Western Europe'
+        AND cl.Language = 'German'
+     ) AS tmp;
+
+Question 11:
+
+SELECT Name, Language
+FROM Country AS c, (SELECT Language
+                 FROM CountryLanguage
+                 WHERE CountryCode = c.Code
+                ) AS tmp;
+
+Question 12:
+
+DROP TABLE IF EXISTS Capitals;
+CREATE TABLE Capitals LIKE City;
+
+INSERT INTO Capitals SELECT * FROM City;
+
+Answer 12:
+
+DELETE FROM Capitals
+WHERE ID NOT IN (SELECT Capital
+                 FROM Country
+                 WHERE Capital IS NOT NULL);
+
+Question 13:
+
+DROP TABLE IF EXISTS client, project;
+CREATE TABLE client (id INT, name CHAR(20));
+CREATE TABLE project (pid INT, id INT, name CHAR(20), start DATE, end DATE);
+INSERT INTO client VALUES
+(101,'Seamen\'s'),
+(103,'Lennart AG'),
+(110,'MySQL AB'),
+(115,'Icoaten & Co.'),
+(125,'Nittboad Inc');
+INSERT INTO project VALUES
+(10000,103,'New CMS','2003-01-00','2003-05-00'),
+(10010,110,'Texi2XML','2002-04-00','2003-09-00'),
+(10020,110,'Studyguides','2002-09-00','2003-03-30'),
+(10030,115,'PDC Server','2003-01-00','2003-01-00'),
+(10040,103,'Intranet','2009-02-00',NULL),
+(10050,101,'Intranet',NULL,NULL),
+(10060,115,'SMB Server','2003-05-00',NULL),
+(10070,115,'WLAN',NULL,'2003-07-00'),
+(10080,135,'Intranet','2003-08-00',NULL),
+(10090,145,'PDC Server',NULL,NULL);
+
+SELECT * FROM client;
+SELECT * FROM project;
+
+SELECT ... FROM project WHERE project.id IN
+ (SELECT client.id FROM client)
+
+Answer 13:
+
+SELECT
+  p.pid AS `Project ID`,
+  p.name AS `Project Name`,
+  c.id AS `Client No`,
+  c.name AS `Client Name`
+ FROM project AS p
+ LEFT JOIN client AS c
+ USING (id) /* or: ON p.id = c.id */
+ WHERE c.name IS NOT NULL
+;
+
+Question 14:
+
+SELECT ... FROM project WHERE project.id IN
+ (SELECT client.id FROM client)
+
+Answer 14:
+
+SELECT
+  p.pid AS `Project ID`,
+  p.name AS `Project Name`,
+  c.id AS `Client No`,
+  c.name AS `Client Name`
+ FROM client AS c
+ RIGHT JOIN project AS p
+ USING (id) /* or: ON c.id = p.id */
+ WHERE c.name IS NOT NULL
+;
+
+Question 15:
+
+SELECT ... FROM project WHERE project.id IN
+ (SELECT client.id FROM client)
+
+Answer 15:
+
+SELECT
+  p.pid AS `Project ID`,
+  p.name AS `Project Name`,
+  c.id AS `Client No`,
+  c.name AS `Client Name`
+ FROM project AS p
+ INNER JOIN client AS c
+USING (id) /* or: ON p.id = c.id */
+;
+
+Question 16:
+
+DROP TABLE IF EXISTS client, project;
+CREATE TABLE client (id INT, name CHAR(20));
+CREATE TABLE project (pid INT, id INT, name CHAR(20), start DATE, end DATE);
+INSERT INTO client VALUES
+(101,'Seamen\'s'),
+(103,'Lennart AG'),
+(110,'MySQL AB'),
+(115,'Icoaten & Co.'),
+(125,'Nittboad Inc');
+INSERT INTO project VALUES
+(10000,103,'New CMS','2003-01-00','2003-05-00'),
+(10010,110,'Texi2XML','2002-04-00','2003-09-00'),
+(10020,110,'Studyguides','2002-09-00','2003-03-30'),
+(10030,115,'PDC Server','2003-01-00','2003-01-00'),
+(10040,103,'Intranet','2009-02-00',NULL),
+(10050,101,'Intranet',NULL,NULL),
+(10060,115,'SMB Server','2003-05-00',NULL),
+(10070,115,'WLAN',NULL,'2003-07-00'),
+(10080,135,'Intranet','2003-08-00',NULL),
+(10090,145,'PDC Server',NULL,NULL);
+
+SELECT * FROM client;
+SELECT * FROM project;
+
+SELECT ... FROM project WHERE project.id NOT IN
+ (SELECT client.id FROM client)
+
+Answer 16:
+
+SELECT
+  p.pid AS `Project ID`,
+  p.name AS `Project Name`,
+  c.id AS `Client No`,
+  c.name AS `Client Name`
+ FROM project AS p
+ LEFT JOIN client AS c
+ USING (id) /* or: ON p.id = c.id */
+ WHERE c.name IS NULL
+;
+
+Question 17:
+
+SELECT ... FROM project WHERE project.id NOT IN
+ (SELECT client.id FROM client)
+
+Answer 17:
+
+SELECT
+  p.pid AS `Project ID`,
+  p.name AS `Project Name`,
+  c.id AS `Client No`,
+  c.name AS `Client Name`
+ FROM client AS c
+ RIGHT JOIN project AS p
+ USING (id) /* or: ON c.id = p.id */
+ WHERE c.name IS NULL
+;
+
+Question 18:
+
+SELECT ... FROM project WHERE project.id NOT IN
+ (SELECT client.id FROM client)
+
+Answer 19:
+
+SELECT Name, COUNT(*) AS nlanguages
+FROM Country c, CountryLanguage cl
+WHERE c.Code = cl.CountryCode 
+  AND cl.IsOfficial = 'T'
+GROUP BY Name
+ORDER BY nlanguages DESC
+LIMIT 1;
+
+SELECT Name, COUNT(*) AS nlanguages,
+       GROUP_CONCAT(Language) as languages
+FROM Country c, CountryLanguage cl
+WHERE c.Code = cl.CountryCode 
+  AND cl.IsOfficial = 'T'
+GROUP BY Name
+ORDER BY nlanguages DESC
+LIMIT 1;
+
+SELECT Name 
+FROM (SELECT Name, COUNT(*) AS nlanguages,
+             GROUP_CONCAT(Language) as languages
+      FROM Country c, CountryLanguage cl
+      WHERE c.Code = cl.CountryCode 
+        AND cl.IsOfficial = 'T'
+      GROUP BY Name
+      ORDER BY nlanguages DESC
+      LIMIT 1
+     ) AS tmp;
+
+SELECT 
+ CONCAT(
+  'The country ',
+  (SELECT Name FROM (
+    SELECT Name, COUNT(*) AS nlanguages,
+           GROUP_CONCAT(Language) as languages
+    FROM Country c, CountryLanguage cl
+    WHERE c.Code = cl.CountryCode 
+      AND cl.IsOfficial = 'T'
+    GROUP BY Name
+    ORDER BY nlanguages DESC, Name
+    LIMIT 1
+   ) AS tmp
+  ), 
+  ' has ',
+  (SELECT nlanguages FROM (
+    SELECT Name, COUNT(*) AS nlanguages,
+           GROUP_CONCAT(Language) as languages
+    FROM Country c, CountryLanguage cl
+    WHERE c.Code = cl.CountryCode 
+      AND cl.IsOfficial = 'T'
+    GROUP BY Name
+    ORDER BY nlanguages DESC, Name
+    LIMIT 1
+   ) AS tmp1
+  ),
+  ' official languages: ', 
+  (SELECT languages FROM  (
+    SELECT Name, COUNT(*) AS nlanguages,
+           GROUP_CONCAT(Language) as languages
+    FROM Country c, CountryLanguage cl
+    WHERE c.Code = cl.CountryCode 
+      AND cl.IsOfficial = 'T'
+    GROUP BY Name
+    ORDER BY nlanguages DESC, Name
+    LIMIT 1
+   ) AS tmp2
+  )
+ );

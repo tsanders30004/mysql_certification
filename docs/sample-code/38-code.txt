@@ -1,0 +1,349 @@
+Chapter 38 Optimizing Databases
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+38.1 General Table Optimizations
+
+SELECT * FROM CountryLanguage PROCEDURE ANALYSE(10,256)\G
+
+DESCRIBE CountryLanguage;
+
+38.2 Normalization
+
+DROP TABLE IF EXISTS Inventory;
+CREATE TABLE Inventory
+(
+    sno INT,
+    sloc CHAR(20),
+    szip CHAR(20),
+    pno1 INT,
+    pname1 CHAR(20),
+    qty1 INT,
+    pno2 INT,
+    pname2 CHAR(20),
+    qty2 INT
+);
+INSERT INTO Inventory VALUES
+(1,'Chicago','60632', 1,'stool',5,2,'lamp',15),
+(2,'Dallas','75206',1,'stool',25,3,'desk',10),
+(3,'Chicago','60632',2,'lamp',10,4,'chair',3);
+SELECT * FROM Inventory ORDER BY sno;
+
+DROP TABLE IF EXISTS Inventory2;
+CREATE TABLE Inventory2
+(
+    sno INT NOT NULL,
+    sloc CHAR(20) NOT NULL,
+    szip CHAR(20) NOT NULL,
+    pno INT NOT NULL,
+    pname CHAR(20) NOT NULL,
+    qty INT,
+    PRIMARY KEY (sno, pno)
+);
+INSERT INTO Inventory2 (sno, sloc, szip, pno, pname, qty)
+SELECT sno, sloc, szip, pno1, pname1, qty1 FROM Inventory;
+INSERT INTO Inventory2 (sno, sloc, szip, pno, pname, qty)
+SELECT sno, sloc, szip, pno2, pname2, qty2 FROM Inventory;
+SELECT * FROM Inventory2 ORDER BY sno, pno;
+
+DROP TABLE IF EXISTS Supplier, Part;
+CREATE TABLE Supplier
+(
+    sno INT NOT NULL,
+    sloc CHAR(20) NOT NULL,
+    szip CHAR(20) NOT NULL,
+    PRIMARY KEY (sno)
+);
+CREATE TABLE Part
+(
+    sno INT NOT NULL,
+    pno INT NOT NULL,
+    pname CHAR(20) NOT NULL,
+    qty INT NOT NULL,
+    PRIMARY KEY (sno, pno)
+);
+INSERT INTO Supplier
+SELECT DISTINCT sno, sloc, szip FROM Inventory2;
+INSERT INTO Part (sno, pno, pname, qty)
+SELECT sno, pno, pname, qty FROM Inventory2;
+SELECT * FROM Supplier ORDER BY sno;
+SELECT * FROM Part ORDER BY sno, pno;
+
+DROP TABLE IF EXISTS PartName;
+CREATE TABLE PartName
+(
+    pno INT NOT NULL,
+    pname CHAR(20) NOT NULL,
+    PRIMARY KEY (pno)
+);
+INSERT INTO PartName (pno, pname)
+SELECT DISTINCT pno, pname FROM Part;
+ALTER TABLE Part DROP pname;
+SELECT * FROM Part ORDER BY sno, pno;
+SELECT * FROM PartName ORDER BY pno;
+
+DROP TABLE IF EXISTS SupplierZip;
+CREATE TABLE SupplierZip
+(
+   sloc CHAR(20) NOT NULL,
+   szip CHAR(20) NOT NULL,
+   PRIMARY KEY (sloc)
+);
+INSERT INTO SupplierZip SELECT DISTINCT sloc, szip FROM Supplier;
+ALTER TABLE Supplier DROP szip;
+SELECT * FROM Supplier ORDER BY sno;
+SELECT * FROM SupplierZip ORDER BY sloc;
+
+SELECT S.sno, S.sloc, SZ.szip, P.pno, PT.pname, P.qty
+FROM Supplier S, SupplierZip SZ, Part P, PartName PT
+WHERE S.sloc = SZ.sloc AND S.sno = P.sno AND P.pno = PT.pno
+ORDER BY S.sno, P.pno;
+
+38.3.1 MyISAM Row-Storage Formats
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (c CHAR(50)) ROW_FORMAT = FIXED;
+
+ALTER TABLE t ROW_FORMAT = DYNAMIC;
+
+SHOW TABLE STATUS LIKE 'Country'\G
+
+SELECT TABLE_NAME, ROW_FORMAT FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world';
+
+38.3.1.1 Using Compressed MyISAM Tables
+
+mysqldump world > world.sql
+
+myisampack Country City CountryLanguage
+
+myisampack *.MYI
+
+myisamchk -rq *.MYI
+
+myisamchk --recover --quick *.MYI
+
+SHOW TABLE STATUS FROM world LIKE 'City'\G
+
+SHOW TABLE STATUS FROM world LIKE 'City'\G
+
+mysqldump world Country > dump.sql
+mysql world < dump.sql
+
+38.3.3 FULLTEXT Indexes
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (name CHAR(40), FULLTEXT (name));
+ALTER TABLE t ADD FULLTEXT name_idx (name);
+ALTER TABLE t DROP INDEX name_idx;
+CREATE FULLTEXT INDEX name_idx ON t (name);
+DROP INDEX name_idx ON t;
+
+SELECT * FROM t WHERE MATCH(name) AGAINST('Wendell');
+
+DROP TABLE IF EXISTS people;
+CREATE TABLE people
+(
+    name    CHAR(40),
+    address CHAR(40),
+    FULLTEXT (name),        # index for searching name only
+    FULLTEXT (address),     # index for searching address only
+    FULLTEXT (name,address) # index for searching name and address
+);
+
+38.3.4 Specifying MyISAM Maximum Row Count
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT) MAX_ROWS = 2000000;
+
+ALTER TABLE t MAX_ROWS = 4000000;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i BIGINT, c VARCHAR(200))
+AVG_ROW_LENGTH = 108 MAX_ROWS = 4000000;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i BIGINT, c VARCHAR(255))
+AVG_ROW_LENGTH = 108 MAX_ROWS = 4000000;
+SHOW TABLE STATUS LIKE 't'\G
+
+38.7 Exercises
+
+Question 2:
+
+DROP TABLE IF EXISTS District;
+CREATE TABLE District
+(DName CHAR(50), DPop INT)
+ENGINE = MyISAM;
+
+INSERT INTO District
+SELECT District, SUM(Population) FROM City
+GROUP BY District;
+
+Answer 2:
+
+SELECT * FROM District PROCEDURE ANALYSE()\G
+
+DESCRIBE District;
+
+Answer 6:
+
+myisampack ..\data\world\City.MYI
+
+myisamchk --recover --quick ..\data\world\City.MYI
+
+Answer 7:
+
+mysql -e "SHOW TABLE STATUS LIKE 'City'" world
+
+Question 10:
+
+DROP TABLE IF EXISTS faq;
+CREATE TABLE faq (
+cdate TIMESTAMP NULL,
+question CHAR(150) NOT NULL,
+answer CHAR(250) NOT NULL,
+FULLTEXT (question), FULLTEXT (answer)
+);
+
+DESCRIBE faq;
+SHOW INDEX FROM faq;
+
+Answer 10:
+
+SELECT
+ LEFT(question,20), LEFT(answer,20)
+ FROM faq
+ WHERE MATCH(question) AGAINST('Access')
+ OR MATCH(answer) AGAINST('Access')
+;
+
+Question 11:
+
+DROP TABLE IF EXISTS mix1;
+CREATE TABLE mix1 (
+id INT NOT NULL PRIMARY KEY DEFAULT 0,
+name VARCHAR(20),
+story TEXT
+) ENGINE = MyISAM;
+
+DESCRIBE mix1;
+SHOW KEYS FROM mix1;
+
+Answer 13:
+
+SELECT TABLE_NAME, MAX_DATA_LENGTH
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world'
+AND TABLE_NAME = 'City';
+
+SELECT @@global.myisam_data_pointer_size;
+
+SET @@global.myisam_data_pointer_size = 7;
+
+ALTER TABLE City ENGINE = MyISAM;
+
+SELECT TABLE_NAME, MAX_DATA_LENGTH
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world'
+AND TABLE_NAME = 'City';
+
+Answer 14:
+
+ALTER TABLE world.City ENGINE = InnoDB;
+
+Answer 15:
+
+SET GLOBAL max_heap_table_size = 1024 * 1024;
+
+SELECT @@global.max_heap_table_size;
+
+Question 16:
+
+SELECT * FROM City LIMIT 5;
+
+DESCRIBE City;
+
+Answer 18:
+
+SHOW TABLE STATUS LIKE 'City'\G
+
+SELECT TABLE_NAME, ROW_FORMAT
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world'
+AND TABLE_NAME = 'City';
+
+Answer 19:
+
+mysql -e "SHOW TABLE STATUS LIKE 'City'" world
+
+Answer 20:
+
+USE world;
+INSERT INTO City (ID, name) VALUES (10000, 'Test City');
+ALTER TABLE City ADD testcolumn INT;
+
+Answer 21:
+
+myisamchk --unpack ..\data\world\City.MYI
+
+mysqldump world City > CityDump.sql
+mysql world < CityDump.sql
+
+DROP TABLE IF EXISTS CityCopy;
+CREATE TABLE CityCopy LIKE City;
+
+INSERT INTO CityCopy SELECT * FROM City;
+
+DROP TABLE City;
+
+ALTER TABLE CityCopy RENAME TO City;
+
+Question 23:
+
+DROP TABLE IF EXISTS faq;
+CREATE TABLE faq (
+cdate TIMESTAMP NULL,
+question CHAR(150) NOT NULL,
+answer CHAR(250) NOT NULL,
+FULLTEXT (question), FULLTEXT (answer)
+);
+
+DESCRIBE faq;
+SHOW INDEX FROM faq;
+
+Answer 23:
+
+SELECT
+ LEFT(question,20), LEFT(answer,20)
+ FROM faq
+ WHERE MATCH(question) AGAINST('MySQL')
+;
+
+Question 24:
+
+DROP TABLE IF EXISTS mix1;
+CREATE TABLE mix1 (
+id INT NOT NULL PRIMARY KEY DEFAULT 0,
+name VARCHAR(20),
+story TEXT
+) ENGINE = MyISAM;
+
+DESCRIBE mix1;
+SHOW KEYS FROM mix1;
+
+Answer 24:
+
+ALTER TABLE mix1 ADD FULLTEXT (story);
+SHOW KEYS FROM mix1;

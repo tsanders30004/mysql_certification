@@ -1,0 +1,606 @@
+Chapter 12 Joins
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+12.2.1 Writing Inner Joins with the Comma Operator
+
+SELECT CountryCode, Language FROM CountryLanguage;
+
+SELECT Code, Name FROM Country;
+
+SELECT Name, Language FROM CountryLanguage, Country
+WHERE CountryCode = Code;
+
+SELECT Code, Name, Continent, Language
+FROM CountryLanguage, Country
+WHERE CountryCode = Code;
+
+SELECT Name, Language, Percentage FROM CountryLanguage, Country
+WHERE CountryCode = Code;
+
+SELECT Name, Language, Percentage FROM CountryLanguage, Country
+WHERE CountryCode = Code ORDER BY Name, Percentage;
+
+SELECT Code, Name, CountryCode, Language
+FROM CountryLanguage, Country;
+
+SELECT Name, Language FROM CountryLanguage, Country
+WHERE CountryCode = Code AND Language = 'Swedish';
+
+SELECT Name, Language FROM CountryLanguage, Country
+WHERE CountryCode = Code AND Name = 'Sweden';
+
+SELECT COUNT(*), Name
+FROM CountryLanguage, Country
+WHERE CountryCode = Code
+GROUP BY Name
+HAVING COUNT(*) > 10;
+
+12.2.2 Writing Inner Joins with INNER JOIN
+
+SELECT Name, Language
+FROM CountryLanguage, Country WHERE CountryCode = Code;
+
+SELECT Name, Language
+FROM CountryLanguage INNER JOIN Country ON CountryCode = Code;
+
+
+SELECT Name, Language
+FROM CountryLanguage INNER JOIN Country USING(Code);
+
+12.3.1 Writing LEFT JOIN Queries
+
+SELECT Name, Language
+FROM Country INNER JOIN CountryLanguage ON Code = CountryCode;
+
+SELECT Name, Language
+FROM Country LEFT JOIN CountryLanguage ON Code = CountryCode;
+
+SELECT Name, Language
+FROM Country LEFT JOIN CountryLanguage ON Code = CountryCode
+WHERE CountryCode IS NULL;
+
+SELECT Name
+FROM Country LEFT JOIN CountryLanguage ON Code = CountryCode
+WHERE CountryCode IS NULL;
+
+12.3.2 Writing RIGHT JOIN Queries
+
+SELECT Name
+FROM Country LEFT JOIN CountryLanguage ON Code = CountryCode
+WHERE CountryCode IS NULL;
+
+SELECT Name
+FROM CountryLanguage RIGHT JOIN Country ON CountryCode = Code
+WHERE CountryCode IS NULL;
+
+12.4.1 Qualifying Column Names
+
+SELECT Name, Name FROM Country, City
+WHERE Code = CountryCode;
+
+SELECT Country.Name, City.Name FROM Country, City
+WHERE Code = CountryCode;
+
+SELECT Country.Name, City.Name FROM Country, City
+WHERE Country.Code = City.CountryCode;
+
+SELECT Country.Name, Country.Population, City.Name, City.Population
+FROM City, Country
+WHERE City.CountryCode = Country.Code
+AND (Country.Population * .75) < City.Population;
+
+12.4.2 Qualifying and Aliasing Table Names
+
+SELECT world1.Country.Name
+FROM world1.Country, world2.Country
+WHERE world1.Country.Name = world2.Country.Name;
+
+SELECT IndepYear, Name, Name
+FROM Country, Country
+WHERE IndepYear = IndepYear AND Name = 'Qatar';
+
+SELECT Country.IndepYear, Country.Name, Country.Name
+FROM Country, Country
+WHERE Country.IndepYear = Country.IndepYear
+AND Country.Name = 'Qatar';
+
+SELECT t1.IndepYear, t1.Name, t2.Name
+FROM Country AS t1, Country AS t2
+WHERE t1.IndepYear = t2.IndepYear AND t1.Name = 'Qatar';
+
+12.5 Multiple-Table UPDATE and DELETE Statements
+
+UPDATE t1, t2 SET t1.name = t2.name WHERE t1.id = t2.id;
+
+DELETE t1 FROM t1, t2 WHERE t1.id = t2.id;
+
+DELETE FROM t1 USING t1, t2 WHERE t1.id = t2.id;
+
+DELETE t1, t2 FROM t1, t2 WHERE t1.id = t2.id;
+DELETE FROM t1, t2 USING t1, t2 WHERE t1.id = t2.id;
+
+12.6 Exercises
+
+Answer 3:
+
+SELECT Name, Language
+FROM Country, CountryLanguage
+WHERE Code = CountryCode
+  AND IsOfficial = 'T';
+
+Answer 4:
+
+SELECT Name, Language
+FROM Country INNER JOIN CountryLanguage
+ON Code = CountryCode
+WHERE IsOfficial = 'T';
+
+Answer 5:
+
+SELECT Country.Name, City.Name, City.Population
+FROM Country
+INNER JOIN City
+ON CountryCode = Code
+WHERE IndepYear IS NULL;
+
+Answer 6:
+
+SELECT Country.Name, SUM(City.Population)
+FROM Country
+INNER JOIN City
+ON CountryCode = Code
+WHERE IndepYear IS NULL
+GROUP BY Country.Name;
+
+Answer 7:
+
+SET @CityCount = (SELECT COUNT(*) FROM City);
+
+SET @CountryCount = (SELECT COUNT(*) FROM Country);
+
+SELECT @CityCount * @CountryCount;
+
+Answer 11:
+
+SELECT c1.Name, c2.Name, c1.Population
+FROM Country AS c1, Country AS c2
+WHERE c1.Population = c2.Population
+AND c1.Name != c2.Name AND c1.Population > 0;
+
+Question 13:
+
+SELECT 
+ Name, Region, Continent, SurfaceArea, Population 
+ FROM Country 
+ WHERE Name = 'Paraguay'
+;
+
+Answer 13:
+
+SELECT
+  c1.Name AS 'Country',
+  c2.Name AS 'Other Countries',
+  c2.Continent AS 'Continent',
+  c2.SurfaceArea AS 'Surface Area'
+ FROM Country AS c1
+ INNER JOIN Country AS c2
+ USING (Continent)
+ WHERE c2.SurfaceArea > c1.SurfaceArea
+ AND c1.Name = 'Paraguay'
+;
+
+Question 14:
+
+SELECT 
+ Name, Region, Continent, SurfaceArea, Population 
+ FROM Country 
+ WHERE Name = 'Germany'
+;
+
+Answer 14:
+
+SELECT
+  c1.Name AS 'Country',
+  c2.Name AS 'Other Countries',
+  c2.Population AS 'Population'
+ FROM Country AS c1, Country AS c2
+ WHERE c2.Population >= c1.Population
+ AND c1.Name = 'Germany'
+ ORDER BY c2.Population DESC
+;
+
+Question 15:
+
+SELECT 
+ Name, Region, Continent, SurfaceArea, Population 
+ FROM Country 
+ WHERE Name = 'Nepal'
+;
+
+Answer 15:
+
+SELECT
+  c1.Name AS 'Country',
+  c2.Name AS 'Other Countries',
+  LEFT(c2.Region,10) AS 'Region',
+  c2.Population AS 'Population',
+  c2.SurfaceArea AS 'Surface'
+ FROM Country AS c1, Country AS c2
+ WHERE c1.Region = c2.Region
+   AND c2.SurfaceArea >= c1.SurfaceArea
+   AND c2.Population  >= c1.Population
+   AND c1.Name = 'Nepal'
+ ORDER BY c2.Population DESC
+;
+
+Question 16:
+
+DROP TABLE IF EXISTS client, project;
+CREATE TABLE client (
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+name CHAR(20) NOT NULL);
+CREATE TABLE project (
+pid INT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+name CHAR(30) NOT NULL,
+start DATE, end DATE);
+INSERT INTO client VALUES
+(101,'Seamen\'s'),
+(103,'Lennart AG'),
+(110,'MySQL AB'),
+(115,'Icoaten & Co.'),
+(125,'Nittboad Inc');
+INSERT INTO project VALUES
+(10000,103,'New CMS','2003-01-00','2003-05-00'),
+(10010,110,'Texi2XML','2002-04-00','2003-09-00'),
+(10020,110,'Studyguides','2002-09-00','2003-03-30'),
+(10030,115,'PDC Server','2003-01-00','2003-01-00'),
+(10040,103,'Intranet','2009-02-00',NULL),
+(10050,101,'Intranet',NULL,NULL),
+(10060,115,'SMB Server','2003-05-00',NULL),
+(10070,115,'WLAN',NULL,'2003-07-00');
+
+DESCRIBE client;
+DESCRIBE project;
+SELECT * FROM client;
+SELECT * FROM project;
+
+SELECT client.name, project.name, project.start, project.end
+ FROM client, project
+;
+
+SELECT client.name, project.name, project.start, project.end
+ FROM client, project
+ WHERE project.cid = client.cid
+;
+
+Question 17:
+
+SELECT client.name, project.name, project.start, project.end
+ FROM client, project
+ WHERE project.cid = client.cid
+ AND project.start IS NOT NULL
+;
+
+SELECT client.name, project.name, project.start, project.end
+ FROM client, project
+ WHERE project.cid = client.cid
+ AND project.start IS NOT NULL
+ AND project.end IS NOT NULL
+;
+
+Question 18:
+
+DROP TABLE IF EXISTS client, project;
+CREATE TABLE client (
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+name CHAR(20) NOT NULL);
+CREATE TABLE project (
+pid INT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+name CHAR(30) NOT NULL,
+start DATE, end DATE);
+INSERT INTO client VALUES
+(101,'Seamen\'s'),
+(103,'Lennart AG'),
+(110,'MySQL AB'),
+(115,'Icoaten & Co.'),
+(125,'Nittboad Inc');
+INSERT INTO project VALUES
+(10000,103,'New CMS','2003-01-00','2003-05-00'),
+(10010,110,'Texi2XML','2002-04-00','2003-09-00'),
+(10020,110,'Studyguides','2002-09-00','2003-03-30'),
+(10030,115,'PDC Server','2003-01-00','2003-01-00'),
+(10040,103,'Intranet','2009-02-00',NULL),
+(10050,101,'Intranet',NULL,NULL),
+(10060,115,'SMB Server','2003-05-00',NULL),
+(10070,115,'WLAN',NULL,'2003-07-00');
+
+DESCRIBE client;
+DESCRIBE project;
+SELECT * FROM client;
+SELECT * FROM project;
+
+Answer 18:
+
+SELECT 
+ c.name AS CLIENT, p.name AS PROJECT, 
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid)
+ WHERE p.cid IS NULL
+ ORDER BY CLIENT
+;
+
+Answer 19:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid)
+ WHERE p.start BETWEEN '2003-01-00' AND '2003-12-31'
+ ORDER BY START
+;
+
+Answer 20:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid) /* or: ON c.cid = p.cid */
+ WHERE p.name = 'Intranet'
+;
+
+Question 21:
+
+DROP TABLE IF EXISTS client, project;
+CREATE TABLE client (
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+name CHAR(20) NOT NULL);
+CREATE TABLE project (
+pid INT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+name CHAR(30) NOT NULL,
+start DATE, end DATE);
+INSERT INTO client VALUES
+(101,'Seamen\'s'),
+(103,'Lennart AG'),
+(110,'MySQL AB'),
+(115,'Icoaten & Co.'),
+(125,'Nittboad Inc');
+INSERT INTO project VALUES
+(10000,103,'New CMS','2003-01-00','2003-05-00'),
+(10010,110,'Texi2XML','2002-04-00','2003-09-00'),
+(10020,110,'Studyguides','2002-09-00','2003-03-30'),
+(10030,115,'PDC Server','2003-01-00','2003-01-00'),
+(10040,103,'Intranet','2009-02-00',NULL),
+(10050,101,'Intranet',NULL,NULL),
+(10060,115,'SMB Server','2003-05-00',NULL),
+(10070,115,'WLAN',NULL,'2003-07-00');
+
+DESCRIBE client;
+DESCRIBE project;
+SELECT * FROM client;
+SELECT * FROM project;
+
+Answer 21:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ INNER JOIN project AS p
+ USING (cid) /* or: ON c.cid = p.cid */
+ WHERE p.name = 'Intranet'
+;
+
+Answer 22:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c, project AS p
+ WHERE c.cid = p.cid
+ AND p.name = 'Intranet'
+;
+
+Answer 23:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid) /* or: ON c.cid = p.cid */
+ ORDER BY c.name, p.start;
+
+Question 24:
+
+DROP TABLE IF EXISTS client, project;
+CREATE TABLE client (
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+name CHAR(20) NOT NULL);
+CREATE TABLE project (
+pid INT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+name CHAR(30) NOT NULL,
+start DATE, end DATE);
+INSERT INTO client VALUES
+(101,'Seamen\'s'),
+(103,'Lennart AG'),
+(110,'MySQL AB'),
+(115,'Icoaten & Co.'),
+(125,'Nittboad Inc');
+INSERT INTO project VALUES
+(10000,103,'New CMS','2003-01-00','2003-05-00'),
+(10010,110,'Texi2XML','2002-04-00','2003-09-00'),
+(10020,110,'Studyguides','2002-09-00','2003-03-30'),
+(10030,115,'PDC Server','2003-01-00','2003-01-00'),
+(10040,103,'Intranet','2009-02-00',NULL),
+(10050,101,'Intranet',NULL,NULL),
+(10060,115,'SMB Server','2003-05-00',NULL),
+(10070,115,'WLAN',NULL,'2003-07-00');
+
+DESCRIBE client;
+DESCRIBE project;
+SELECT * FROM client;
+SELECT * FROM project;
+
+Answer 24:
+
+SELECT 
+ c.name AS CLIENT, p.name AS PROJECT, 
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid)
+ WHERE p.cid IS NULL
+;
+
+Answer 25:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid)
+ WHERE p.start BETWEEN '2003-01-00' AND '2003-12-31'
+ ORDER BY START
+;
+
+Answer 26:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid) /* or: ON c.cid = p.cid */
+ WHERE p.name = 'Intranet'
+;
+
+Question 27:
+
+DROP TABLE IF EXISTS client, project;
+CREATE TABLE client (
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+name CHAR(20) NOT NULL);
+CREATE TABLE project (
+pid INT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+name CHAR(30) NOT NULL,
+start DATE, end DATE);
+INSERT INTO client VALUES
+(101,'Seamen\'s'),
+(103,'Lennart AG'),
+(110,'MySQL AB'),
+(115,'Icoaten & Co.'),
+(125,'Nittboad Inc');
+INSERT INTO project VALUES
+(10000,103,'New CMS','2003-01-00','2003-05-00'),
+(10010,110,'Texi2XML','2002-04-00','2003-09-00'),
+(10020,110,'Studyguides','2002-09-00','2003-03-30'),
+(10030,115,'PDC Server','2003-01-00','2003-01-00'),
+(10040,103,'Intranet','2009-02-00',NULL),
+(10050,101,'Intranet',NULL,NULL),
+(10060,115,'SMB Server','2003-05-00',NULL),
+(10070,115,'WLAN',NULL,'2003-07-00');
+
+DESCRIBE client;
+DESCRIBE project;
+SELECT * FROM client;
+SELECT * FROM project;
+
+Answer 27:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ INNER JOIN project AS p
+ USING (cid) /* or: ON c.cid = p.cid */
+ WHERE p.name = 'Intranet'
+;
+
+Answer 28:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c, project AS p
+ WHERE c.cid = p.cid
+ AND p.name = 'Intranet'
+;
+
+Answer 29:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid) /* or: ON c.cid = p.cid */
+ ORDER BY c.name, p.start;
+
+Question 30:
+
+DROP TABLE IF EXISTS client, project;
+CREATE TABLE client (
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+name CHAR(20) NOT NULL);
+CREATE TABLE project (
+pid INT UNSIGNED NOT NULL DEFAULT 0 PRIMARY KEY,
+cid SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+name CHAR(30) NOT NULL,
+start DATE, end DATE);
+INSERT INTO client VALUES
+(101,'Seamen\'s'),
+(103,'Lennart AG'),
+(110,'MySQL AB'),
+(115,'Icoaten & Co.'),
+(125,'Nittboad Inc');
+INSERT INTO project VALUES
+(10000,103,'New CMS','2003-01-00','2003-05-00'),
+(10010,110,'Texi2XML','2002-04-00','2003-09-00'),
+(10020,110,'Studyguides','2002-09-00','2003-03-30'),
+(10030,115,'PDC Server','2003-01-00','2003-01-00'),
+(10040,103,'Intranet','2009-02-00',NULL),
+(10050,101,'Intranet',NULL,NULL),
+(10060,115,'SMB Server','2003-05-00',NULL),
+(10070,115,'WLAN',NULL,'2003-07-00');
+
+DESCRIBE client;
+DESCRIBE project;
+SELECT * FROM client;
+SELECT * FROM project;
+
+Answer 30:
+
+SELECT
+ c.name AS CLIENT, p.name AS PROJECT,
+ p.start AS START, p.end AS END
+ FROM client AS c
+ LEFT JOIN project AS p
+ USING (cid) /* or: ON c.cid = p.cid */
+ WHERE p.start IS NOT NULL
+   AND p.end   IS NOT NULL
+ ORDER BY c.name ASC, p.start ASC
+;

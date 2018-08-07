@@ -1,0 +1,389 @@
+Chapter 11 Updating Data
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+11.1 Update Operations
+
+DROP TABLE IF EXISTS people;
+CREATE TABLE people
+(
+    id     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    name   CHAR(40) NOT NULL DEFAULT '',
+    age    INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
+);
+
+11.2 The INSERT Statement
+
+INSERT INTO people (id,name,age) VALUES(12,'William',25);
+
+DELETE FROM people WHERE id = 12;
+INSERT INTO people SET id = 12, name = 'William', age = 25;
+
+INSERT INTO people (name,age) VALUES('William',25);
+INSERT INTO people SET name = 'William', age = 25;
+
+INSERT INTO people () VALUES();
+
+DELETE FROM people WHERE id = 12;
+INSERT INTO people VALUES(12,'William',25);
+
+INSERT INTO people VALUES('William',25);
+
+INSERT INTO people VALUES(12,25,'William');
+
+11.2.1 Adding Multiple Records with a Single INSERT Statement
+
+INSERT INTO people (name,age)
+VALUES('William',25),('Bart',15),('Mary',12);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT);
+
+INSERT INTO t (i) VALUES(1,2,3,4,5);
+
+INSERT INTO t (i) VALUES(1),(2),(3),(4),(5);
+
+11.2.3 Using INSERT ... ON DUPLICATE KEY UPDATE
+
+DROP TABLE IF EXISTS log;
+CREATE TABLE log (
+  name     CHAR(30) NOT NULL,
+  location CHAR(30) NOT NULL,
+  counter  INT UNSIGNED NOT NULL,
+  PRIMARY KEY (name, location));
+
+INSERT INTO log (name, location, counter)
+VALUES ('Tantor', 'Waterhole', 1)
+ON DUPLICATE KEY UPDATE counter=counter+1;
+
+SELECT * FROM log;
+
+INSERT INTO log (name, location, counter)
+VALUES ('Tantor', 'Waterhole', 1)
+ON DUPLICATE KEY UPDATE counter=counter+1;
+
+SELECT * FROM log;
+
+11.3 The REPLACE Statement
+
+REPLACE INTO people (id,name,age) VALUES(12,'William',25);
+
+REPLACE INTO people (id,name,age)
+VALUES(12,'William',25),(13,'Bart',15),(14,'Mary',12);
+
+REPLACE INTO people SET id = 12, name = 'William', age = 25;
+
+DROP TABLE IF EXISTS multikey;
+CREATE TABLE multikey
+(
+    i INT NOT NULL UNIQUE,
+    j INT NOT NULL UNIQUE,
+    k INT NOT NULL UNIQUE
+);
+INSERT INTO multikey VALUES(1,1,1),(2,2,2),(3,3,3),(4,4,4);
+SELECT * FROM multikey;
+
+REPLACE INTO multikey (i,j,k) VALUES(1,2,3);
+
+SELECT * FROM multikey;
+
+11.4 The UPDATE Statement
+
+UPDATE people SET age = 30 WHERE id = 12;
+
+UPDATE people SET age = 30, name = 'Wilhelm' WHERE id = 12;
+
+UPDATE people SET age = age WHERE id = 12;
+
+11.4.1 Using UPDATE with ORDER BY and LIMIT
+
+DELETE FROM people;
+INSERT INTO people (id,name,age) VALUES(2,'Victor',21),(3,'Susan',15);
+SELECT * FROM people;
+
+UPDATE people SET id = id - 1;
+
+UPDATE people SET id = id - 1 ORDER BY id;
+
+DELETE FROM people;
+INSERT INTO people (name) VALUES('Nicolas'),('Nicolas');
+UPDATE people SET name = 'Nick' WHERE name = 'Nicolas' LIMIT 1;
+
+11.5.1 Using DELETE with ORDER BY and LIMIT
+
+DELETE FROM people WHERE name = 'Emily' LIMIT 4;
+
+DELETE FROM people WHERE name = 'Emily' ORDER BY id DESC LIMIT 4;
+
+11.7 Exercises
+
+Question 1:
+
+CREATE TABLE `City` (
+  `ID` int(11) NOT NULL auto_increment,
+  `Name` char(35) NOT NULL default '',
+  `CountryCode` char(3) NOT NULL default '',
+  `District` char(20) NOT NULL default '',
+  `Population` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+INSERT INTO City VALUES ();
+
+Answer 1:
+
+INSERT INTO City VALUES ();
+
+SELECT * FROM City WHERE ID = LAST_INSERT_ID();
+
+Question 2:
+
+CREATE TABLE `City` (
+  `ID` int(11) NOT NULL auto_increment,
+  `Name` char(35) NOT NULL default '',
+  `CountryCode` char(3) NOT NULL default '',
+  `District` char(20) NOT NULL default '',
+  `Population` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+INSERT INTO City SET Name = NULL;
+
+Answer 2:
+
+SET SQL_MODE = 'STRICT_ALL_TABLES';
+
+INSERT INTO City SET Name = NULL;
+
+Question 3:
+
+DROP TABLE IF EXISTS twounique;
+CREATE TABLE twounique (id1 TINYINT UNSIGNED NOT NULL DEFAULT 0,
+id2 TINYINT UNSIGNED NOT NULL DEFAULT 0,
+PRIMARY KEY (id1), UNIQUE (id2));
+INSERT INTO twounique VALUES(1,2);
+DESCRIBE twounique;
+SELECT * FROM twounique;
+
+Answer 3:
+
+DELETE FROM twounique;
+INSERT INTO twounique VALUES(1,2);
+INSERT IGNORE INTO twounique VALUES (1,42)
+/* Note the number of affected rows */;
+
+SELECT * FROM twounique;
+
+DELETE FROM twounique;
+INSERT INTO twounique VALUES(1,2);
+REPLACE INTO twounique VALUES (1,42)
+/* Note the number of affected rows */;
+
+SELECT * FROM twounique;
+
+DELETE FROM twounique;
+INSERT INTO twounique VALUES(1,2);
+INSERT INTO twounique VALUES (1,42);
+
+DELETE FROM twounique;
+INSERT INTO twounique VALUES(1,2);
+INSERT INTO twounique VALUES (1,42)
+ON DUPLICATE KEY UPDATE id1 = id1+1, id2 = id2+1;
+
+SELECT * FROM twounique;
+
+Question 4:
+
+DROP TABLE IF EXISTS twounique;
+CREATE TABLE twounique (id1 TINYINT UNSIGNED NOT NULL DEFAULT 0,
+id2 TINYINT UNSIGNED NOT NULL DEFAULT 0,
+PRIMARY KEY (id1), UNIQUE (id2));
+INSERT INTO twounique VALUES(1,2);
+INSERT INTO twounique VALUES(3,4);
+INSERT INTO twounique VALUES(5,6);
+DESCRIBE twounique;
+SELECT * FROM twounique;
+
+REPLACE INTO twounique VALUES (2,2);
+
+REPLACE INTO twounique VALUES (2,6);
+
+Answer 4:
+
+REPLACE INTO twounique VALUES (2,2);
+
+SELECT * FROM twounique;
+
+REPLACE INTO twounique VALUES (2,6);
+
+SELECT * FROM twounique;
+
+Question 7:
+
+DROP TABLE IF EXISTS access_log;
+CREATE TABLE access_log (
+  PIN CHAR(6) NOT NULL PRIMARY KEY,
+  entries INT UNSIGNED NOT NULL DEFAULT 0
+DESCRIBE access_log;
+
+INSERT INTO access_log VALUES
+('156734', 6), ('578924', 2), ('479645', 10), ('356845', 5); 
+SELECT * FROM access_log;
+
+Answer 7:
+
+INSERT INTO access_log (PIN, entries) VALUES ('578924', 1)
+ON DUPLICATE KEY UPDATE entries = entries+1;
+  
+INSERT INTO access_log (PIN, entries) VALUES ('687456', 1)
+ON DUPLICATE KEY UPDATE entries = entries+1;
+
+Answer 8:
+
+SELECT * FROM tbl1;
+
+TRUNCATE TABLE tbl1;
+
+DELETE FROM tbl1;
+
+DELETE FROM tbl1 WHERE id < 5;
+DELETE FROM tbl1 WHERE 1 = 1;
+
+Answer 9:
+
+SELECT * FROM tbl1;
+
+DELETE FROM tbl1 WHERE id > 1 AND id < 4;
+DELETE FROM tbl1 WHERE id BETWEEN 2 AND 3;
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel (pid INT NOT NULL, grade INT NULL);
+INSERT INTO personnel VALUES
+(1,1),
+(2,2),
+(3,NULL),
+(4,NULL),
+(5,NULL),
+(6,1),
+(7,1),
+(8,1),
+(9,NULL),
+(10,NULL),
+(11,NULL),
+(12,1),
+(13,NULL);
+
+SELECT pid, grade FROM personnel;
+
+UPDATE personnel SET grade = 1 WHERE grade != 2;
+
+Question 15:
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel (pid INT NOT NULL PRIMARY KEY,
+unit INT NOT NULL,  grade INT NULL);
+INSERT INTO personnel VALUES
+(1,42,1),
+(2,42,2),
+(3,42,NULL),
+(4,42,NULL),
+(5,42,NULL),
+(6,23,1),
+(7,23,1),
+(8,23,1),
+(9,23,NULL),
+(10,42,NULL),
+(11,23,NULL),
+(12,23,1),
+(13,42,NULL);
+
+SELECT * FROM personnel;
+
+Answer 15:
+
+UPDATE personnel SET grade = 3 WHERE grade IS NULL;
+
+Answer 16:
+
+REPLACE INTO personnel VALUES (10,45,4);
+
+SELECT * FROM personnel WHERE pid=10;
+
+Question 17:
+
+<programlisting>
+DROP TABLE IF EXISTS petnames;
+CREATE TABLE petnames (name CHAR(10));
+INSERT INTO petnames VALUES
+('Lucy'),
+('Macie'),
+('Myra'),
+('Cheep'),
+('Lucy'),
+('Myra'),
+('Cheep'),
+('Macie'),
+('Pablo'),
+('Stefan');
+
+SELECT * FROM petnames;
+
+UPDATE petnames SET name = CONCAT(name, '_!!!') ORDER BY name LIMIT 1;
+
+Answer 17:
+
+SELECT * FROM petnames;
+
+Question 18:
+
+TRUNCATE TABLE mytable;
+
+Question 19:
+
+DELETE FROM mytable;
+
+Answer 19:
+
+DELETE FROM mytable WHERE 1;
+
+Question 20:
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel (pid INT NOT NULL PRIMARY KEY,
+unit INT NOT NULL,  grade INT NULL);
+INSERT INTO personnel VALUES
+(1,42,1),
+(2,42,2),
+(3,42,NULL),
+(4,42,NULL),
+(5,42,NULL),
+(6,23,1),
+(7,23,1),
+(8,23,1),
+(9,23,NULL),
+(10,42,NULL),
+(11,23,NULL),
+(12,23,1),
+(13,42,NULL);
+
+SELECT * FROM personnel;
+
+Answer 20:
+
+UPDATE personnel
+ SET unit = IF(unit=23, 42, 23)
+;
+
+SELECT * FROM personnel;

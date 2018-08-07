@@ -1,0 +1,851 @@
+Chapter 9 Querying for Data
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+9.2 Specifying Which Columns to Retrieve
+
+SELECT 2+2, REPEAT('x',5), DATE_ADD('2001-01-01',INTERVAL 7 DAY), 1/0;
+
+DESCRIBE City;
+
+SELECT ID, Name, CountryCode, District, Population FROM City;
+
+SELECT ID, Name, CountryCode, District, Population FROM City;
+SELECT * FROM City;
+
+9.2.1 Renaming Retrieved Columns
+
+SELECT 1 AS One, 4*3 'Four Times Three';
+
+9.2.2 Identifying the Database Containing a Table
+
+SELECT * FROM Country;
+
+SELECT * FROM world.Country;
+
+9.3 Specifying Which Rows to Retrieve
+
+SELECT * FROM Country WHERE IndepYear > 1990;
+
+WHERE Population >= 1000000 AND Population <= 2000000;
+
+SELECT * FROM Country
+WHERE Population BETWEEN 1000000 AND 2000000;
+
+9.3.1 Using ORDER BY to Sort Query Results
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (id INT, last_name CHAR(30), first_name CHAR(30), birth DATE);
+INSERT INTO t VALUES
+(1,'Brown','Bill','1972-10-14'),
+(2,'Larsson','Sven','1965-1-3'),
+(3,'Brown','Betty','1971-7-12'),
+(4,'Larsson','Selma','1968-5-29')
+;
+
+SELECT id, last_name, first_name, birth FROM t;
+
+SELECT id, last_name, first_name, birth FROM t
+ORDER BY birth;
+
+SELECT id, last_name, first_name, birth FROM t
+ORDER BY last_name, first_name;
+
+SELECT id, last_name, first_name, birth FROM t
+ORDER BY id DESC;
+
+SELECT last_name, first_name FROM t ORDER BY last_name, first_name;
+
+SELECT last_name AS last, first_name AS first FROM t ORDER BY last, first;
+
+SELECT last_name, first_name FROM t ORDER BY 1, 2;
+
+SELECT id, last_name, first_name, MONTH(birth)
+    FROM t ORDER BY MONTH(birth);
+
+SELECT id, last_name, first_name, MONTH(birth) AS m
+    FROM t ORDER BY m;
+
+SELECT id, last_name, first_name, MONTHNAME(birth) FROM t
+ORDER BY MONTH(birth);
+
+9.3.2 The Natural Sort Order of Data Types
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (c CHAR(10));
+INSERT INTO t VALUES('a'),('A'),('B'),('A'),('b'),('a');
+
+SELECT c FROM t;
+
+SELECT c FROM t ORDER BY c;
+
+SELECT c FROM t ORDER BY c COLLATE latin1_general_cs;
+
+SELECT c FROM t ORDER BY c COLLATE latin1_bin;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    mon ENUM('Jan','Feb','Mar','Apr','May','Jun',
+             'Jul','Aug','Sep','Oct','Nov','Dec')
+);
+INSERT INTO t
+VALUES('Jan'),('Feb'),('Mar'),('Apr'),('May'),('Jun'),
+      ('Jul'),('Aug'),('Sep'),('Oct'),('Nov'),('Dec');
+
+
+SELECT mon FROM t ORDER BY mon;
+
+SELECT mon FROM t ORDER BY CAST(mon AS CHAR);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (hue SET('red','green','blue'));
+INSERT INTO t (hue) VALUES('red,green'),('red,green,blue'),
+('red,blue'),('green,blue');
+
+SELECT hue FROM t;
+
+SELECT hue FROM t ORDER BY hue;
+
+SELECT hue FROM t ORDER BY CAST(hue AS CHAR);
+
+9.3.3 Limiting a Selection Using LIMIT
+
+SELECT * FROM Country LIMIT 10;
+
+SELECT * FROM Country LIMIT 20,10;
+
+SELECT * FROM t ORDER BY id LIMIT 1;
+
+SELECT * FROM t ORDER BY id DESC LIMIT 1;
+
+SELECT * FROM t ORDER BY id LIMIT  0, 20;
+SELECT * FROM t ORDER BY id LIMIT 20, 20;
+SELECT * FROM t ORDER BY id LIMIT 40, 20;
+SELECT * FROM t ORDER BY id LIMIT 60, 20;
+
+9.3.4 Using DISTINCT to Eliminate Duplicates
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (id INT, last_name CHAR(30), first_name CHAR(30), d DATE);
+INSERT INTO t VALUES
+(1,'Brown','Bill','1972-10-14'),
+(2,'Larsson','Sven','1965-1-3'),
+(3,'Brown','Betty','1971-7-12'),
+(4,'Larsson','Selma','1968-5-29')
+;
+
+SELECT last_name FROM t;
+
+SELECT DISTINCT last_name FROM t;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT, j INT);
+INSERT INTO t VALUES(1,2),(1,NULL),(1,NULL);
+
+SELECT i, j FROM t;
+
+SELECT DISTINCT i, j FROM t;
+
+SELECT DISTINCT id FROM t;
+SELECT id FROM t GROUP BY id;
+
+SELECT DISTINCT id, name FROM t;
+SELECT id, name FROM t GROUP BY id, name;
+
+SELECT j FROM t;
+SELECT COUNT(DISTINCT j) FROM t;
+
+9.4 Aggregating Results
+
+SELECT Continent, AVG(Population) FROM Country GROUP BY Continent;
+
+9.4.1 The MIN() and MAX() Aggregate Functions
+
+SELECT MIN(Population), MAX(Population) FROM Country;
+SELECT MIN(Name), MAX(Name) FROM Country;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (name CHAR(20));
+INSERT INTO t VALUES('Calvin'),('alex');
+
+SELECT name FROM t;
+
+SELECT MAX(name) FROM t;
+
+ALTER TABLE t MODIFY name BINARY(20);
+SELECT MAX(name) FROM t;
+
+9.4.2 The SUM() and AVG() Aggregate Functions
+
+SELECT SUM(Population), AVG(Population) FROM Country;
+
+9.4.3 The COUNT() Aggregate Function
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT, j INT);
+INSERT INTO t VALUES(1,NULL),(NULL,2),(1,1),(1,1),(1,3),(NULL,NULL);
+INSERT INTO t VALUES(1,NULL);
+
+SELECT i, j FROM t;
+
+SELECT COUNT(*) FROM t;
+
+SELECT COUNT(i), COUNT(j) FROM t;
+
+SELECT COUNT(DISTINCT i), COUNT(DISTINCT j) FROM t;
+
+SELECT COUNT(DISTINCT i, j) FROM t;
+
+9.4.4 The GROUP_CONCAT() Function
+
+SELECT Language
+FROM CountryLanguage WHERE CountryCode = 'THA';
+
+SELECT GROUP_CONCAT(Language)
+AS Languages
+FROM CountryLanguage WHERE CountryCode = 'THA';
+
+SELECT GROUP_CONCAT(Language SEPARATOR ' - ')
+AS Languages
+FROM CountryLanguage WHERE CountryCode = 'THA';
+
+SELECT
+GROUP_CONCAT(Language ORDER BY Language DESC)
+AS Languages
+FROM CountryLanguage WHERE CountryCode = 'THA';
+
+SELECT
+GROUP_CONCAT(Language)
+AS Languages
+FROM CountryLanguage WHERE CountryCode IN('PRK','KOR');
+
+SELECT
+GROUP_CONCAT(DISTINCT Language)
+AS Languages
+FROM CountryLanguage WHERE CountryCode IN('PRK','KOR');
+
+9.5 Grouping Results
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel
+(
+ pers_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ name        CHAR(40) NOT NULL,
+ dept_id     INT UNSIGNED NOT NULL,
+ title       CHAR(100) NOT NULL,
+ salary      DECIMAL(8,2) NOT NULL
+);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Wendy',14,'Supervisor',38000);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Wally',7,'Stock clerk',28000);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Ray',7,'Programmer',41000);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Burton',14,'Secretary',32000);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Gordon',14,'President',78000);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Jeff',7,'Stock clerk',29000);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Doris',7,'Programmer',48000);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Daisy',7,'Secretary',33000);
+INSERT INTO personnel (name,dept_id,title,salary)
+VALUES('Bea',7,'Accountant',40000);
+
+SELECT * FROM personnel;
+
+SELECT COUNT(*) FROM personnel;
+
+SELECT title, COUNT(*) FROM personnel
+GROUP BY title;
+
+SELECT dept_id, COUNT(*) FROM personnel
+GROUP BY dept_id;
+
+SELECT dept_id, title, COUNT(*) FROM personnel
+GROUP BY dept_id, title;
+
+SELECT title, MIN(salary), MAX(salary), AVG(salary)
+FROM personnel
+GROUP BY title;
+
+SELECT dept_id, MIN(salary), MAX(salary), AVG(salary)
+FROM personnel
+GROUP BY dept_id;
+
+SELECT GovernmentForm, GROUP_CONCAT(Name) AS Countries
+FROM Country
+WHERE Continent = 'South America'
+GROUP BY GovernmentForm\G
+
+SELECT GovernmentForm,
+       GROUP_CONCAT(Name ORDER BY Name ASC SEPARATOR ' - ')
+       AS Countries
+FROM Country
+WHERE Continent = 'South America'
+GROUP BY GovernmentForm\G
+
+SELECT Continent,
+       GROUP_CONCAT(GovernmentForm ORDER BY GovernmentForm ASC)
+       AS 'Government Form'
+FROM Country
+WHERE Name LIKE 'I%'
+GROUP BY Continent;
+
+SELECT Continent,
+       GROUP_CONCAT(DISTINCT GovernmentForm
+                    ORDER BY GovernmentForm ASC)
+       AS 'Government Form'
+FROM Country
+WHERE Name LIKE 'I%'
+GROUP BY Continent;
+
+9.5.2 Selecting Groups with HAVING
+
+SELECT title, salary
+FROM personnel WHERE dept_id = 7;
+
+SELECT title, COUNT(*), AVG(salary)
+FROM personnel WHERE dept_id = 7
+GROUP BY title;
+
+SELECT title, salary, COUNT(*), AVG(salary)
+FROM personnel WHERE dept_id = 7
+GROUP BY title
+HAVING COUNT(*) > 1;
+
+9.5.3 Using GROUP BY and WITH ROLLUP
+
+SELECT Continent, SUM(Population) AS pop
+FROM Country
+GROUP BY Continent;
+
+SELECT SUM(Population) AS pop
+FROM Country;
+
+SELECT Continent, SUM(Population) AS pop
+FROM Country
+GROUP BY Continent WITH ROLLUP;
+
+SELECT Continent, AVG(Population) AS avg_pop
+FROM Country
+GROUP BY Continent WITH ROLLUP;
+
+SELECT AVG(Population) AS avg_pop
+FROM Country;
+
+SELECT Continent, Region,
+       SUM(Population) AS pop,
+       AVG(Population) AS avg_pop
+FROM Country
+GROUP BY Continent, Region WITH ROLLUP;
+
+9.6 Using UNION
+
+CREATE TABLE list1
+(
+    subscriber  CHAR(60),
+    email       CHAR(60)
+);
+
+CREATE TABLE list2
+(
+    name        CHAR(96),
+    address     CHAR(128)
+);
+
+CREATE TABLE list3
+(
+    email       CHAR(50),
+    real_name   CHAR(30)
+);
+
+
+SELECT subscriber, email FROM list1
+UNION SELECT name, address FROM list2
+UNION SELECT real_name, email FROM list3;
+
+(SELECT subscriber, email FROM list1)
+UNION (SELECT name, address FROM list2)
+UNION (SELECT real_name, email FROM list3)
+ORDER BY email LIMIT 10;
+
+(SELECT subscriber, email FROM list1 ORDER BY email LIMIT 5)
+UNION (SELECT name, address FROM list2 ORDER BY address LIMIT 5)
+UNION (SELECT real_name, email FROM list3 ORDER BY email LIMIT 5);
+
+9.7 Exercises
+
+Answer 1:
+
+SELECT MIN(d) FROM t;
+SELECT MAX(d) FROM t;
+
+Answer 2:
+
+SELECT * FROM t ORDER BY d LIMIT 1;
+SELECT * FROM t ORDER BY d DESC LIMIT 1;
+
+Question 3:
+
+SELECT Code, Name, IndepYear FROM Country;
+
+Answer 3:
+
+SELECT Code, Name, IndepYear FROM Country
+WHERE IndepYear IS NOT NULL
+ORDER BY IndepYear DESC LIMIT 1;
+
+SELECT Code, Name, IndepYear FROM Country
+WHERE IndepYear IS NOT NULL
+ORDER BY IndepYear ASC LIMIT 1;
+
+Answer 7:
+
+SELECT Name, Population FROM City
+ WHERE (
+        (Name >= 'B' AND Name < 'G')
+        OR
+        (Name >= 'K' AND Name < 'N')
+       )
+        AND Population > 1000000
+ ORDER BY Name ASC
+;
+
+Question 8:
+
+DROP TABLE IF EXISTS petbirth;
+CREATE TABLE petbirth (name CHAR(20), birth DATE);
+INSERT INTO petbirth VALUES
+('Fluffy','1993-02-04'),
+('Claws','1994-03-17'),
+('Buffy','1989-05-13'),
+('Fang','1990-08-27'),
+('Bowser','1995-07-29'),
+('Chirpy','1998-09-11'),
+('Whistler','1997-12-09'),
+('Slim','1996-04-29'),
+('Puffball','1999-03-30'),
+('Lucy','1988-05-08'),
+('Macie','1997-05-08'),
+('Myra','1997-06-09'),
+('Cheep','1998-05-08');
+
+DESCRIBE petbirth;
+SELECT * FROM petbirth;
+
+Answer 8:
+
+SELECT
+ name         AS Pet,
+ MONTH(birth) AS Month,
+ YEAR(birth)  AS Year
+FROM petbirth
+ORDER BY Year DESC, Month DESC
+;
+
+Question 10:
+
+SELECT Name,
+GNP * 1.1 AS 'GNP raised by 10%'
+FROM Country LIMIT 1;
+
+SELECT Name,
+GNP * 1.1 GNP raised by 10%
+FROM Country LIMIT 1;
+
+SELECT Continent,
+SUM(GNP) * 1.1 AS 'New GNP'
+FROM Country GROUP BY Continent;
+
+SELECT Name, 
+GNP AS 'Gross National Product'
+FROM Country WHERE 'Gross National Product' < 1000;
+
+SELECT Name,
+GNP AS 'Gross National Product'
+FROM Country WHERE GNP < 1000;
+
+Question 11:
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (c CHAR(10));
+INSERT INTO t VALUES('a'),('A'),('B'),('A'),('b'),('a');
+
+SELECT * FROM t;
+
+SHOW COLLATION LIKE 'latin1_%';
+
+Answer 11:
+
+SELECT c FROM t ORDER BY c;
+SELECT c FROM t ORDER BY c COLLATE latin1_general_ci;
+
+SELECT c FROM t ORDER BY c COLLATE latin1_general_cs;
+
+SELECT c FROM t ORDER BY c COLLATE latin1_bin;
+
+Question 12:
+
+SELECT DISTINCT CountryCode FROM CountryLanguage;
+
+Answer 12:
+
+SELECT CountryCode FROM CountryLanguage GROUP BY CountryCode;
+
+Question 13:
+
+DROP TABLE IF EXISTS petbirth;
+CREATE TABLE petbirth (name CHAR(20), birth DATE);
+INSERT INTO petbirth VALUES
+('Fluffy','1993-02-04'),
+('Claws','1994-03-17'),
+('Buffy','1989-05-13'),
+('Fang','1990-08-27'),
+('Bowser','1995-07-29'),
+('Chirpy','1998-09-11'),
+('Whistler','1997-12-09'),
+('Slim','1996-04-29'),
+('Puffball','1999-03-30'),
+('Lucy','1988-05-08'),
+('Macie','1997-05-08'),
+('Myra','1997-06-09'),
+('Cheep','1998-05-08');
+
+DESCRIBE petbirth;
+SELECT * FROM petbirth;
+
+Answer 13:
+
+SELECT
+ name, birth
+FROM petbirth
+ORDER BY birth ASC
+LIMIT 1
+;
+
+Question 14:
+
+DROP TABLE IF EXISTS pet;
+CREATE TABLE pet (name CHAR(20), owner CHAR(20), species CHAR(20),
+gender CHAR(1));
+INSERT INTO pet VALUES
+('Fluffy','Harold','cat','f'),
+('Claws','Gwen','cat','m'),
+('Buffy','Harold','dog','f'),
+('Fang','Benny','dog','m'),
+('Bowser','Diane','dog','m'),
+('Chirpy','Gwen','bird','f'),
+('Whistler','Gwen','bird',NULL),
+('Slim','Benny','snake','m'),
+('Puffball','Diane','hamster','f');
+
+DESCRIBE pet;
+SELECT * FROM pet;
+
+Answer 14:
+
+SELECT 
+ gender AS Gender, 
+ COUNT(*) AS Total
+FROM pet
+WHERE gender IS NOT NULL
+GROUP BY Gender;
+
+SELECT
+ species AS Kind,
+ COUNT(*) AS Total
+FROM pet
+GROUP BY Kind
+ORDER BY Total DESC;
+
+SELECT
+ species AS Kind,
+ COUNT(*) AS Total
+FROM pet
+WHERE species='dog' OR species='cat'
+GROUP BY Kind
+ORDER BY Total DESC;
+
+SELECT
+ species AS Kind,
+ COUNT(*) AS Total
+FROM pet
+GROUP BY Kind
+HAVING Kind='dog' OR Kind='cat'
+ORDER BY Total DESC;
+
+Question 15:
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel (pid SMALLINT UNSIGNED NOT NULL UNIQUE,
+unit TINYINT UNSIGNED NOT NULL, salary DECIMAL(9,2) NOT NULL);
+INSERT INTO personnel VALUES
+(1,42,1500.00),
+(2,42,1700.00),
+(3,42,1950.00),
+(4,42,2300.00),
+(5,42,1900.00),
+(6,23,850.00),
+(7,23,1250.00),
+(8,23,1450.00),
+(9,23,1920.00),
+(10,42,2200.00),
+(11,23,2900.00),
+(12,23,1000.00),
+(13,42,2850.00);
+
+DESCRIBE personnel;
+SELECT * FROM personnel;
+
+Answer 15:
+
+SELECT
+ unit AS Unit,
+ COUNT(*) AS Employees,
+ SUM(salary) AS Total,
+ AVG(salary) AS Average
+FROM personnel
+GROUP BY Unit
+ORDER BY Total DESC
+;
+
+SELECT
+ unit AS Unit,
+ MAX(salary) AS High,
+ MIN(salary) AS Low
+FROM personnel
+GROUP BY Unit
+;
+
+Answer 16:
+
+SELECT Continent, GROUP_CONCAT(Name)
+FROM Country
+WHERE Population > 100000000
+GROUP BY Continent;
+
+Answer 17:
+
+SELECT GROUP_CONCAT(District ORDER BY District SEPARATOR " - ")
+AS 'Dutch Districts' FROM City
+WHERE CountryCode = 'NLD'\G
+
+Question 18:
+
+DROP TABLE IF EXISTS pet;
+CREATE TABLE pet (name CHAR(20), owner CHAR(20), species CHAR(20),
+gender CHAR(1));
+INSERT INTO pet VALUES
+('Fluffy','Harold','cat','f'),
+('Claws','Gwen','cat','m'),
+('Buffy','Harold','dog','f'),
+('Fang','Benny','dog','m'),
+('Bowser','Diane','dog','m'),
+('Chirpy','Gwen','bird','f'),
+('Whistler','Gwen','bird',NULL),
+('Slim','Benny','snake','m'),
+('Puffball','Diane','hamster','f');
+
+DESCRIBE pet;
+SELECT * FROM pet;
+
+Answer 18:
+
+SELECT COUNT(*) FROM pet;
+
+SELECT COUNT(gender) FROM pet;
+
+SELECT COUNT(DISTINCT gender) FROM pet;
+
+SELECT COUNT(DISTINCT species) FROM pet;
+
+Question 19:
+
+DROP TABLE IF EXISTS pet;
+CREATE TABLE pet (name CHAR(20), owner CHAR(20), species CHAR(20),
+gender CHAR(1));
+INSERT INTO pet VALUES
+('Fluffy','Harold','cat','f'),
+('Claws','Gwen','cat','m'),
+('Buffy','Harold','dog','f'),
+('Fang','Benny','dog','m'),
+('Bowser','Diane','dog','m'),
+('Chirpy','Gwen','bird','f'),
+('Whistler','Gwen','bird',NULL),
+('Slim','Benny','snake','m'),
+('Puffball','Diane','hamster','f');
+
+DESCRIBE pet;
+SELECT * FROM pet;
+
+Answer 19:
+
+SELECT
+ species AS Species,
+ gender  AS Gender,
+ COUNT(*) AS Total
+FROM pet
+GROUP BY Species, Gender
+;
+
+Answer 20:
+
+SELECT Continent, COUNT(*)
+FROM Country
+GROUP BY Continent WITH ROLLUP;
+
+Question 21:
+
+CREATE DATABASE IF NOT EXISTS project1;
+CREATE DATABASE IF NOT EXISTS project2;
+CREATE DATABASE IF NOT EXISTS project3;
+DROP TABLE IF EXISTS project1.user;
+DROP TABLE IF EXISTS project2.users;
+DROP TABLE IF EXISTS project3.members;
+CREATE TABLE project1.user (name CHAR(20), job CHAR(20));
+CREATE TABLE project2.users (nick CHAR(20), task CHAR(20));
+CREATE TABLE project3.members (member CHAR(20), job CHAR(20));
+INSERT INTO project1.user VALUES
+('John','Manager'),
+('Steve','Programmer'),
+('Andy','Webdesigner');
+INSERT INTO project2.users VALUES
+('Jim','Manager'),
+('Steve','Programmer');
+INSERT INTO project3.members VALUES
+('John','Manager'),
+('Steve','Programmer'),
+('Carol','Webdesigner');
+
+SELECT * FROM project1.user;
+SELECT * FROM project2.users;
+SELECT * FROM project3.members;
+
+Answer 21:
+
+ SELECT
+  name AS TeamMember,
+  job  AS TeamTask
+ FROM project1.user
+UNION ALL
+ SELECT * FROM project2.users
+UNION ALL
+ SELECT * FROM project3.members
+ORDER BY TeamMember
+;
+
+ SELECT
+  name AS TeamMember,
+  job  AS TeamTask
+ FROM project1.user
+UNION
+ SELECT * FROM project2.users
+UNION
+ SELECT * FROM project3.members
+ORDER BY TeamMember
+;
+
+Question 22:
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel
+(
+  pid   SMALLINT UNSIGNED NOT NULL PRIMARY KEY,
+  unit  TINYINT UNSIGNED NULL DEFAULT NULL,
+  grade TINYINT UNSIGNED NULL DEFAULT NULL
+);
+INSERT INTO personnel VALUES
+(1,42,1),
+(2,42,2),
+(3,42,NULL),
+(4,42,NULL),
+(5,42,NULL),
+(6,23,1),
+(7,23,1),
+(8,23,1),
+(9,23,NULL),
+(10,42,NULL),
+(11,23,NULL),
+(12,23,1),
+(13,42,NULL);
+
+DESCRIBE personnel;
+SELECT * FROM personnel;
+
+SELECT unit, COUNT(grade) FROM personnel GROUP BY unit;
+
+Answer 22:
+
+SELECT unit, COUNT(grade) FROM personnel GROUP BY unit;
+
+Question 23:
+
+SELECT unit, SUM(grade) FROM personnel GROUP BY unit;
+
+Answer 23:
+
+SELECT unit, SUM(grade) FROM personnel GROUP BY unit;
+
+Question 24:
+
+SELECT unit, AVG(grade) FROM personnel GROUP BY unit;
+
+Answer 24:
+
+SELECT unit, AVG(grade) FROM personnel GROUP BY unit;
+
+Question 25:
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel
+(
+  pid   SMALLINT UNSIGNED NOT NULL PRIMARY KEY,
+  unit  TINYINT UNSIGNED NULL DEFAULT NULL,
+  grade TINYINT UNSIGNED NULL DEFAULT NULL
+);
+INSERT INTO personnel VALUES
+(1,42,1),
+(2,42,2),
+(3,42,NULL),
+(4,42,NULL),
+(5,42,NULL),
+(6,23,1),
+(7,23,1),
+(8,23,1),
+(9,23,NULL),
+(10,42,NULL),
+(11,23,NULL),
+(12,23,1),
+(13,42,NULL);
+
+DESCRIBE personnel;
+SELECT * FROM personnel;
+
+SELECT unit, COUNT(*) FROM personnel GROUP BY unit;
+
+Answer 25:
+
+SELECT unit, COUNT(*) FROM personnel GROUP BY unit;
+
+Question 26:
+
+SELECT unit, COUNT(DISTINCT grade) FROM personnel GROUP BY unit;
+
+Answer 26:
+
+SELECT unit, COUNT(DISTINCT grade) FROM personnel GROUP BY unit;

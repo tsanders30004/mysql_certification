@@ -1,0 +1,107 @@
+Chapter 35 Securing the MySQL Installation
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+35.3 Filesystem Security
+
+chown -R mysql /usr/local/mysql
+chgrp -R mysql /usr/local/mysql
+
+chmod u=rwx,go=rx /usr/local/mysql
+chmod u=rwx,go=rx /usr/local/mysql/bin
+chmod u=rwx,go-rwx /usr/local/mysql/libexec
+chmod -R go-rwx /usr/local/mysql/data
+
+chown mysql /etc/my.cnf
+chgrp mysql /etc/my.cnf
+chmod u=rw,go=r /etc/my.cnf
+
+chmod u=rw,go-rwx ~/.my.cnf
+
+35.5.1 Securing the Initial MySQL Accounts
+
+In the following example, make these substitutions: 
+- Replace rootpass with the root password
+- Replace host_name with a hostname
+
+mysqladmin -u root password 'rootpass'
+mysqladmin -u root -h host_name password 'rootpass'
+
+mysql -u root mysql
+
+In the following example, make this substitution: 
+- Replace rootpass with the root password
+
+UPDATE user SET Password = PASSWORD('rootpass')
+WHERE User = 'root';
+
+DELETE FROM user
+WHERE User = 'root' AND Host = '%';
+
+DELETE FROM user WHERE User = '';
+DELETE FROM db WHERE User = '';
+
+SELECT Host, User, Password FROM user;
+
+FLUSH PRIVILEGES;
+
+35.5.2 General Privilege Precautions
+
+SELECT Host, User FROM user WHERE Password = '';
+
+35.6 FEDERATED Table Security
+
+CREATE TABLE FedCity
+(
+    ID          INT NOT NULL AUTO_INCREMENT,
+    Name        CHAR(35) NOT NULL,
+    CountryCode CHAR(3) NOT NULL,
+    District    CHAR(20) NOT NULL,
+    Population  INT NOT NULL,
+    PRIMARY KEY (ID)
+)
+ENGINE=FEDERATED
+COMMENT='mysql://wuser:wpass@world.example.com/world/City';
+
+35.7 Exercises
+
+Answer 5:
+
+In the following example, make this substitution: 
+- Replace rootpass with the root password
+
+mysql -u root mysql
+
+UPDATE user SET Password = PASSWORD('rootpass')
+WHERE User = 'root';
+DELETE FROM user
+WHERE User = 'root' AND Host = '%';
+DELETE FROM user WHERE User = '';
+DELETE FROM db WHERE User = '';
+FLUSH PRIVILEGES;
+
+
+SELECT * FROM user
+WHERE User = '' OR Password = '';
+
+Answer 6:
+
+SET GLOBAL sql_mode = 'NO_AUTO_CREATE_USER';
+
+SELECT @@global.sql_mode;
+
+Answer 10:
+
+SELECT TABLE_COMMENT FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world' AND TABLE_NAME = 'fedTable';

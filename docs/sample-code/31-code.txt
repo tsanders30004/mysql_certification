@@ -1,0 +1,47 @@
+Chapter 31 The INFORMATION_SCHEMA Database
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+31.1 INFORMATION_SCHEMA Access Syntax
+
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'INFORMATION_SCHEMA';
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'INFORMATION_SCHEMA'
+AND TABLE_NAME = 'CHARACTER_SETS';
+
+SELECT TABLE_NAME, TABLE_ROWS, TABLE_COLLATION
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world';
+
+31.2 INFORMATION_SCHEMA Versus SHOW
+
+SHOW TABLES FROM world;
+
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world';
+
+31.4 Exercises
+
+Answer 2:
+
+SHOW TABLES FROM information_schema;
+
+Answer 3:
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'world' AND TABLE_NAME = 'City';
+
+SHOW COLUMNS FROM City FROM world;

@@ -1,0 +1,56 @@
+Chapter 7 Databases
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+7.2 Creating Databases
+
+CREATE DATABASE mydb;
+
+CREATE DATABASE IF NOT EXISTS mydb;
+
+CREATE DATABASE mydb CHARACTER SET utf8 COLLATE utf8_danish_ci;
+
+USE mydb;
+
+7.3 Altering Databases
+
+ALTER DATABASE mydb COLLATE utf8_polish_ci;
+
+ALTER DATABASE mydb CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+
+7.4 Dropping Databases
+
+DROP DATABASE mydb;
+
+DROP DATABASE IF EXISTS mydb;
+
+7.5 Obtaining Database Metadata
+
+SELECT * FROM INFORMATION_SCHEMA.SCHEMATA
+WHERE SCHEMA_NAME = 'world'\G
+
+SHOW DATABASES;
+
+SHOW DATABASES LIKE 'm%';
+
+SHOW CREATE DATABASE world\G
+
+7.6 Exercises
+
+Answer 6:
+
+SELECT * FROM INFORMATION_SCHEMA.SCHEMATA
+WHERE SCHEMA_NAME = 'world'\G
+
+SHOW CREATE DATABASE world\G

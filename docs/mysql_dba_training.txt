@@ -1,0 +1,204 @@
+MySQL
+-----
+
+
+Can't connect to local MySQL server through socket...  
+	Is the server running?
+	
+	In RHEL:  service mysqld start
+			chkconfig mysqld on
+			
+
+MySQL Hardening Best Practices
+------------------------------
+
+1.	Set a strong password for the root user.
+
+	set password for 'username'@'localhost'=password('the_new_password');
+	set password for 'username'@'127.0.0.1'=password('the_new_password');
+	
+2.	Delete anonymous users.
+
+	???
+	
+3.	Disable use of symbolic links.  (Startup parameter).
+
+	If a user can create a symbolic link in the data directory that points to a system
+	table, then in effect the user can drop those tables.
+	
+	Start with --skip-symbolic-link parameter.
+	
+4.	Rename the root user account.  
+
+	'root' is the common root user account.  Hackers know this.  
+	
+	update mysql.user set user = ' mysql_dba' where user = 'root';
+	flush privileges;
+	
+5.	Enable logging.
+
+	This can be done in the my.cnf file.  Or probably as command-line options when
+	the server is started.
+	
+6.	Remove TCP/IP Networking (?)
+
+	Look for something called mysql_secure_installation
+	
+
+MySQL DBA Training 5 Storage Engines in MySQL
+---------------------------------------------
+
+MySQL is the only RDBMS that has the concept of 'storage engines'.
+
+Specify engine when table is created:
+	create table(...) engine=innodb;
+
+Think of a storage engines as a file system...  The key differences between storage 
+engines is with respect to how they manage *locking* and *transactions*.
+
+Only one engine is ACID compliance:  InnoDB.
+
+Use the following to see what storage engine is used:
+	show create table...
+	show table status;
+	select ... from information_schema.tables...
+	
+Each storage engine must be compiled into MySQL.  
+
+MyISAM
+------
+
+*	Improved version of ISAM.
+*	Was the default storage engine after 3.23.
+*	Is fast and optimized for web-application databases.
+*	Does *not* support transactions.
+*	Often used in data warehousing.
+*	64 keys per table.  Max key length = 1024 bytes.
+*	Max table size depends on host operating system.
+*	Supports only table-level locking.  (No row-level locking.)
+*	Does not support foreign key constraints.
+*	One auto_increment column per table.
+*	Is the only storage engine that supports full-text search.
+*	Data files can be ported from system to system.
+*	High-byte first pattern for saving numeric key values.
+*	Storage on Disk / Three Files
+	*	Table structure (.frm)
+	*	Table Data (.MYD)
+	*	Table Indices (.MYI)
+*	Can be use for MERGE tables.
+*	Very FAST for reads.
+*	Multiple tables can read at the same time.
+*	Can disable non-unique indexing when loading and re-enable afterward.
+*	If you run out of disk space while adding rows, no error will result.  Instead,
+	the server will suspend the operation until more space becomes available.
+*	Deadlocking cannot occur since only table locking (not row locking) is supported.
+*	Support concurrent inserts.  Depends on read and write locks...
+*	Tables can have holes.  Defragment via OPTIMIZE TABLES.
+*	Generally, write requests take priority over read requests.
+* 	Can configure read, update, delete, etc., priority.
+*	Can have different row formats (fixed, compressed, dynamic, etc.).
+	*	fixed take more space but are faster.
+	*	dynamic take less space but are slower.
+	
+
+Merge Engine
+------------
+*	Is a collection of *identically structured* MyISAM tables.
+*	A query on a merge table is logically a query on the set of tables it represents.
+*	This can be used to work around the individual maximum MyISAM table size.
+*	table RE: .MRG is a text file and the MyISAM tables it names are portable.
+*	Are portable.  The ,MRG file is a text file and MyISAM tables are portable.
+*	Supports select, delete, update, and insert.
+
+BMD (?)
+-------
+
+
+Archive
+-------
+*	Used to store large amounts of data when you don't need indices and need to 
+	minimize disk space used.
+*	Only supports SELECT and INSERT statements.
+*	.FRM, .ARZ, .ARM
+
+CSV
+---
+* 	Does not support indexing.
+
+Black Hole
+----------
+*	Data goes in but never comes out.
+
+InnoDB
+------
+
+He did not talk about InnoDB!!!!
+
+
+##########################################################################################
+
+Describe / Indices / Primary Keys
+---------------------------------
+
+CREATE TABLE `t2` (
+  `id1` int(11) NOT NULL,
+  `id2` int(11) NOT NULL,
+  `i1` int(11) NOT NULL,
+  `i2` int(11) NOT NULL,
+  `i3` int(11) NOT NULL,
+  `i4` int(11) NOT NULL,
+  PRIMARY KEY (`id1`,`id2`),
+  UNIQUE KEY `i3` (`i3`,`i4`),
+  UNIQUE KEY `i2` (`i2`)
+);
+
+root@localhost[scratch] desc t2;
++-------+---------+------+-----+---------+-------+
+| Field | Type    | Null | Key | Default | Extra |
++-------+---------+------+-----+---------+-------+
+| id1   | int(11) | NO   | PRI | NULL    |       |
+| id2   | int(11) | NO   | PRI | NULL    |       |
+| i1    | int(11) | NO   |     | NULL    |       |
+| i2    | int(11) | NO   | UNI | NULL    |       |
+| i3    | int(11) | NO   | MUL | NULL    |       |
+| i4    | int(11) | NO   |     | NULL    |       |
++-------+---------+------+-----+---------+-------+
+6 rows in set (0.00 sec)
+
+root@localhost[scratch] select table_name, column_name, is_nullable, index_name, 
+constraint_type, constraint_name from tsanders.v_describe where table_name = 't2';
+
++------------+-------------+-------------+------------+-----------------+-----------------+
+| table_name | column_name | is_nullable | index_name | constraint_type | constraint_name |
++------------+-------------+-------------+------------+-----------------+-----------------+
+| t2         | id1         | NO          | PRIMARY    | PRIMARY KEY     | PRIMARY         |
+| t2         | id2         | NO          | PRIMARY    | PRIMARY KEY     | PRIMARY         |
+| t2         | i1          | NO          | NULL       | NULL            | NULL            |
+| t2         | i2          | NO          | i2         | UNIQUE          | i2              |
+| t2         | i3          | NO          | i3         | UNIQUE          | i3              |
+| t2         | i4          | NO          | i3         | UNIQUE          | i3              |
++------------+-------------+-------------+------------+-----------------+-----------------+
+6 rows in set (0.05 sec)
+
+Note that composite primary keys are shown in DESCRIBE but composite UNIQUE are not;
+only the first column.
+
+*** Make sure you understand composite keys and how indices work with them. ***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

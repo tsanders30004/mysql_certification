@@ -1,0 +1,242 @@
+Chapter 39 Optimizing the Server
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+39.1.1 Accessing Server System Variables
+
+SHOW VARIABLES;
+
+SHOW VARIABLES LIKE '%buffer_size';
+
+SHOW VARIABLES LIKE 'datadir';
+
+[mysqld]
+datadir = /var/mysql/data
+key_buffer_size = 64M
+
+SET GLOBAL key_buffer_size = 128*1024*1024;
+SET @@global.key_buffer_size = 128*1024*1024;
+
+SET GLOBAL storage_engine = MyISAM;
+SET @@global.storage_engine = MyISAM;
+
+SET SESSION storage_engine = InnoDB;
+SET @@session.storage_engine = InnoDB;
+
+SET LOCAL storage_engine = InnoDB;
+SET @@local.storage_engine = InnoDB;
+SET storage_engine = InnoDB;
+SET @@storage_engine = InnoDB;
+
+SET LOCAL storage_engine = InnoDB;
+SELECT @@global.storage_engine, @@session.storage_engine;
+
+SET LOCAL storage_engine = InnoDB;
+SELECT @@storage_engine;
+
+39.1.2 Accessing Server Status Variables
+
+SHOW STATUS;
+
+SHOW STATUS LIKE 'qcache%';
+
+SHOW STATUS LIKE 'Uptime';
+
+SHOW STATUS LIKE 'Com%';
+
+SHOW STATUS LIKE 'Com_delete';
+SHOW STATUS LIKE 'Com_update';
+SHOW STATUS LIKE 'Com_select';
+
+39.2 Measuring Server Load
+
+STATUS;
+
+39.3 Tuning Memory Parameters
+
+[mysqld]
+key_buffer_size = 16K
+table_cache = 4
+sort_buffer_size = 64K
+
+[mysqld]
+key_buffer_size = 256M
+table_cache = 256
+sort_buffer_size = 1M
+query_cache_type = ON
+query_cache_size = 16M
+
+39.3.1.3 The MyISAM Key Cache
+
+SHOW STATUS LIKE 'Key_read%';
+
+39.3.2 Per-Client Parameters
+
+[mysqld]
+max_allowed_packet = 128M
+
+39.4.1 Enabling the Query Cache
+
+SHOW VARIABLES LIKE 'query_cache%';
+
+[mysqld]
+query_cache_type = 1
+query_cache_size = 10M
+query_cache_limit = 2M
+
+SET GLOBAL query_cache_type = ON;
+SET GLOBAL query_cache_size = 10485760;
+SET GLOBAL query_cache_limit = 2097152;
+
+SET SESSION query_cache_type = OFF;
+
+39.4.2 Measuring Query Cache Utilization
+
+SHOW STATUS LIKE 'Qcache%';
+
+39.5 Exercises
+
+Answer 1:
+
+SHOW STATUS;
+
+mysqladmin extended-status
+
+Answer 2:
+
+SHOW VARIABLES LIKE 'datadir';
+
+SHOW STATUS LIKE 'Threads_connected';
+
+Answer 3:
+
+[mysqld]
+basedir = D:/mysql
+datadir = D:/mysql_datafiles
+key_buffer_size = 24M
+
+Answer 6:
+
+[mysqld]
+sort_buffer_size=512000
+
+Answer 7:
+
+SET GLOBAL sort_buffer_size=512000;
+
+SET @@global.sort_buffer_size=512000;
+
+Answer 8:
+
+SHOW STATUS LIKE 'Com%';
+
+SHOW STATUS LIKE 'Qcache_hits';
+
+Answer 12:
+
+SHOW STATUS LIKE 'Connections';
+SHOW STATUS LIKE 'Aborted_connects';
+
+Answer 13:
+
+SHOW STATUS LIKE 'Aborted_clients';
+
+Answer 15:
+
+SHOW VARIABLES LIKE 'read%buffer_size';
+
+Answer 16:
+
+SHOW VARIABLES LIKE 'join_buffer_size';
+
+Answer 17:
+
+SHOW VARIABLES LIKE 'query_cache%';
+
+Answer 19:
+
+SHOW STATUS LIKE 'Qcache%';
+
+Question 20:
+
+SHOW VARIABLES LIKE 'table_cache';
+
+SHOW STATUS LIKE 'Open_tables';
+
+SHOW STATUS LIKE 'Opened_tables';
+
+Answer 22:
+
+SHOW VARIABLES;
+
+mysqladmin variables
+
+Answer 23:
+
+SHOW VARIABLES LIKE 'basedir';
+SHOW VARIABLES LIKE 'datadir';
+
+Answer 25:
+
+mysqld --sort_buffer_size=512000
+
+Answer 26:
+
+SET SESSION sort_buffer_size=512000;
+
+SET @@session.sort_buffer_size=512000;
+
+Question 27:
+
+SHOW STATUS LIKE 'Opened_tables';
+SELECT * FROM faq LIMIT 1;
+SHOW STATUS LIKE 'Opened_tables';
+SELECT * FROM t LIMIT 1;
+SHOW STATUS LIKE 'Opened_tables';
+
+Answer 27:
+
+SHOW VARIABLES LIKE 'table_cache';
+
+SET GLOBAL table_cache=64;
+SHOW VARIABLES LIKE 'table_cache';
+
+Answer 29:
+
+SHOW STATUS LIKE 'key_read%';
+
+Answer 30:
+
+SHOW VARIABLES LIKE 'key_buffer_size';
+SET GLOBAL key_buffer_size=16777216;
+SHOW VARIABLES LIKE 'key_buffer_size';
+
+Answer 31:
+
+SHOW STATUS LIKE 'Aborted_connects';
+
+Answer 32:
+
+SHOW STATUS LIKE 'Connections';
+SHOW STATUS LIKE 'Aborted_connects';
+SHOW STATUS LIKE 'Aborted_clients';
+
+Answer 33:
+
+SHOW VARIABLES LIKE 'sort_buffer_size';
+
+Answer 34:
+
+SHOW VARIABLES LIKE 'net_buffer_length';
+SHOW VARIABLES LIKE 'max_allowed_packet';

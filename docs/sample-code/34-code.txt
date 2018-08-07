@@ -1,0 +1,277 @@
+Chapter 34 User Management
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+34.1.4 Creating and Dropping User Accounts
+
+CREATE USER 'jim'@'localhost' IDENTIFIED BY 'Abc123';
+
+DROP USER 'jim'@'localhost';
+
+RENAME USER 'jim'@'localhost' TO 'john'@'localhost';
+
+34.1.5 Specifying Account Names
+
+CREATE USER ''@'localhost';
+
+CREATE USER 'jim'@'client.example.com';
+
+34.1.6 Granting Privileges
+
+GRANT SELECT ON world.* TO 'jim'@'localhost' IDENTIFIED BY 'Abc123';
+
+GRANT SELECT, INSERT, DELETE, UPDATE ON world.*
+TO 'jim'@'localhost' IDENTIFIED BY 'Abc123';
+
+GRANT SELECT (ID, Name, CountryCode), UPDATE (Name, CountryCode)
+ON world.City TO 'jim'@'localhost'
+IDENTIFIED BY 'Abc123';
+
+GRANT SELECT ON world.* TO 'jim'@'localhost'
+IDENTIFIED BY 'Abc123'
+WITH GRANT OPTION;
+
+SHOW GRANTS;
+SHOW GRANTS FOR CURRENT_USER();
+
+SHOW GRANTS FOR 'jen'@'myhost.example.com';
+
+34.1.7 Revoking Privileges
+
+REVOKE DELETE, INSERT, UPDATE ON world.* FROM 'jim'@'localhost';
+
+REVOKE GRANT OPTION ON world.* FROM 'jill'@'localhost';
+
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'james'@'localhost';
+
+CREATE TABLE IF NOT EXISTS test.mytable (i int);
+CREATE USER 'jen'@'myhost.example.com';
+GRANT FILE ON *.* TO 'jen'@'myhost.example.com';
+GRANT SELECT ON `mydb`.* TO 'jen'@'myhost.example.com';
+GRANT UPDATE ON `test`.`mytable` TO 'jen'@'myhost.example.com';
+DROP TABLE test.mytable;
+
+SHOW GRANTS FOR 'jen'@'myhost.example.com';
+
+DROP USER 'jen'@'myhost.example.com';
+
+CREATE TABLE IF NOT EXISTS test.mytable (i int);
+CREATE USER 'jen'@'myhost.example.com';
+GRANT FILE ON *.* TO 'jen'@'myhost.example.com';
+GRANT SELECT ON `mydb`.* TO 'jen'@'myhost.example.com';
+GRANT UPDATE ON `test`.`mytable` TO 'jen'@'myhost.example.com';
+DROP TABLE test.mytable;
+REVOKE FILE ON *.* FROM 'jen'@'myhost.example.com';
+
+REVOKE UPDATE ON test.mytable FROM 'jen'@'myhost.example.com';
+
+DROP USER 'jen'@'myhost.example.com';
+
+CREATE TABLE IF NOT EXISTS test.mytable (i int);
+CREATE USER 'jen'@'myhost.example.com';
+GRANT FILE ON *.* TO 'jen'@'myhost.example.com';
+GRANT SELECT ON `mydb`.* TO 'jen'@'myhost.example.com';
+GRANT UPDATE ON `test`.`mytable` TO 'jen'@'myhost.example.com';
+DROP TABLE test.mytable;
+REVOKE FILE ON *.* FROM 'jen'@'myhost.example.com';
+REVOKE UPDATE ON test.mytable FROM 'jen'@'myhost.example.com';
+
+SHOW GRANTS FOR 'jen'@'myhost.example.com';
+
+DROP USER 'jen'@'myhost.example.com';
+
+34.1.8 Changing Account Passwords
+
+SET PASSWORD FOR 'jim'@'localhost' = PASSWORD('NewPass');
+
+SET PASSWORD = PASSWORD('NewPass');
+
+GRANT USAGE ON *.* TO 'jim'@'localhost' IDENTIFIED BY 'NewPass';
+
+SET PASSWORD FOR 'jim'@'localhost' = '';
+
+GRANT USAGE ON *.* TO 'jim'@'localhost' IDENTIFIED BY '';
+
+34.1.10 Specifying Resource Limits
+
+GRANT ALL ON test.* TO 'quinn'@'localhost' IDENTIFIED BY 'SomePass'
+WITH MAX_CONNECTIONS_PER_HOUR 10
+MAX_QUERIES_PER_HOUR 50
+MAX_UPDATES_PER_HOUR 20;
+
+GRANT USAGE ON *.* TO 'quinn'@'localhost'
+WITH MAX_CONNECTIONS_PER_HOUR 0;
+
+34.2.1 Connection Request Checking
+
+SELECT USER(), CURRENT_USER();
+
+SELECT USER(), CURRENT_USER();
+
+34.3 Exercises
+
+Answer 1:
+
+SELECT Host, User FROM mysql.user WHERE Password = '';
+
+DELETE FROM mysql.user WHERE Password = '';
+FLUSH PRIVILEGES;
+
+Answer 2:
+
+DELETE FROM mysql.user WHERE User = '' OR User = 'root';
+
+DELETE FROM mysql.db WHERE User = '' OR User = 'root';
+
+FLUSH PRIVILEGES;
+
+Answer 3:
+
+CREATE USER 'superuser'@'localhost' IDENTIFIED BY 's3creT';
+
+GRANT
+      ALL PRIVILEGES ON *.*
+      TO 'superuser'@'localhost'
+      WITH GRANT OPTION
+;
+
+GRANT
+      ALL PRIVILEGES ON *.*
+      TO 'superuser'@'localhost'
+      IDENTIFIED BY 's3creT'
+      WITH GRANT OPTION
+;
+
+Answer 4:
+
+GRANT
+      SELECT, INSERT, UPDATE, DELETE
+      ON accounting.*
+      TO 'steve'@'%'
+      IDENTIFIED BY 'some_password1'
+;
+
+Answer 5:
+
+GRANT
+      ALL PRIVILEGES
+      ON marketing.*
+      TO 'pablo'@'192.168.%'
+      IDENTIFIED BY 'some_password2'
+      WITH GRANT OPTION
+;
+
+Answer 6:
+
+GRANT
+      ALL PRIVILEGES
+      ON *.*
+      TO 'admin'@'localhost'
+      IDENTIFIED BY 'some_password3'
+;
+
+Question 7:
+
+SELECT
+ Host, User, Select_priv
+ FROM mysql.user
+ WHERE User = 'icke'
+;
+
+Question 8:
+
+CREATE USER 'lennart';
+
+GRANT CREATE ON not_yet_existent_db.* TO 'lennart';
+
+Answer 8:
+
+SHOW GRANTS FOR 'lennart';
+
+Answer 9:
+
+SHOW GRANTS FOR 'lennart';
+
+REVOKE usage ON *.* FROM 'lennart';
+
+SHOW GRANTS FOR 'lennart';
+
+DROP USER 'lennart';
+
+SHOW GRANTS FOR 'lennart';
+
+Question 10:
+
+DROP USER someone;
+CREATE USER someone;
+GRANT SELECT ON test.* TO someone;
+GRANT INSERT ON world.Country TO someone WITH GRANT OPTION;
+GRANT INSERT ON world.City TO someone;
+
+SHOW GRANTS FOR 'someone';
+
+Answer 10:
+
+REVOKE SELECT ON test.* FROM 'someone';
+
+REVOKE INSERT ON world.City FROM 'someone';
+
+REVOKE INSERT, GRANT OPTION ON world.Country FROM 'someone';
+
+SHOW GRANTS FOR 'someone';
+
+REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'someone';
+
+SHOW GRANTS FOR 'someone';
+
+DROP USER 'someone';
+
+SHOW GRANTS FOR 'someone';
+
+Answer 13:
+
+GRANT USAGE ON *.* TO 'someone'@'localhost' WITH
+ MAX_CONNECTIONS_PER_HOUR 10
+ MAX_QUERIES_PER_HOUR 1000
+ MAX_UPDATES_PER_HOUR 100;
+
+SHOW GRANTS FOR 'someone'@'localhost'\G
+
+Answer 14:
+
+CREATE USER 'lennart'@'localhost' IDENTIFIED BY 'sEcR3t';
+
+SHOW GRANTS FOR 'lennart'@'localhost'\G
+
+Answer 15:
+
+SET PASSWORD FOR 'someone'@'%' = PASSWORD('miteeSekure');
+
+GRANT USAGE ON *.* TO 'someone'@'%' IDENTIFIED BY 'miteeSekure';
+
+Answer 16:
+
+mysqld --skip-grant-tables --skip-networking
+
+mysql
+
+UPDATE mysql.user
+ SET Password = PASSWORD('NeverForget')
+ WHERE User = 'superuser'
+;
+EXIT;
+
+mysqladmin shutdown
+
+mysqlcheck -u root -p --all-databases

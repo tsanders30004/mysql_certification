@@ -1,0 +1,129 @@
+Chapter 32 Data Backup and Recovery Methods
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+32.3.1 Making Binary MyISAM Backups
+
+USE world;
+LOCK TABLES Country READ;
+FLUSH TABLES Country;
+
+UNLOCK TABLES;
+
+32.4.2 Making Text Backups with mysqldump
+
+mysqldump world > world.sql
+
+mysqldump world City Country > city_country.sql
+
+mysqldump --databases world test > world_and_test.sql
+
+mysqldump --all-databases > alldb.sql
+
+32.8.1 Reloading mysqldump Output
+
+mysqldump world Country > dump.sql
+
+mysql world < dump.sql
+
+mysqldump world Country | mysql test
+
+mysqldump world Country | mysql -h other.host.com world
+
+mysqldump --tab=/tmp world City
+
+cd /tmp
+mysql world < City.sql
+mysqlimport world City.txt
+
+32.9 Exercises
+
+Answer 3:
+
+USE world;
+LOCK TABLES City READ, Country READ, CountryLanguage READ;
+FLUSH TABLES City, Country, CountryLanguage;
+
+cd /var/lib/mysql/world
+cp City.* Country.* CountryLanguage.* /tmp
+
+UNLOCK TABLES;
+
+Answer 4:
+
+mysqldump world City Country > /tmp/world_backup.sql
+
+Answer 5:
+
+mysqldump --add-drop-table --databases
+    db1 db2 > /tmp/db1_db2_backup.sql
+
+Question 7:
+
+SHOW TABLES;
+
+mysqldump project --tab=/tmp
+
+Answer 7:
+
+CREATE DATABASE project;
+USE project;
+
+SOURCE /tmp/auth.sql;
+SOURCE /tmp/lang.sql;
+SOURCE /tmp/project.sql;
+SHOW TABLES;
+
+LOAD DATA INFILE '/tmp/auth.txt' INTO TABLE auth;
+LOAD DATA INFILE '/tmp/lang.txt' INTO TABLE lang;
+LOAD DATA INFILE '/tmp/project.txt' INTO TABLE project;
+
+Answer 18:
+
+mysqldump --no-data test > /backups/structure.sql
+
+Answer 19:
+
+mysql test < /backups/back.sql
+
+Answer 20:
+
+LOCK TABLES mytable READ;
+FLUSH TABLES;
+
+UNLOCK TABLES;
+
+mysqldump test mytable > mytabledump.sql
+
+mysql test < mytabledump.sql
+
+Answer 22:
+
+mysqldump --no-create-info --tab=/tmp
+    --lines-terminated-by="\r\n" project
+
+Question 23:
+
+mysqldump --no-create-info --tab=/tmp
+    --lines-terminated-by="\r\n" project
+
+Answer 23:
+
+LOAD DATA INFILE '/tmp/table_1.txt' INTO TABLE table_1
+LINES TERMINATED BY '\r\n';
+
+Answer 24:
+
+mysqldump --tab=/backup --fields-terminated-by=,
+    --lines-terminated-by="\r\n" test tbl1 tbl2

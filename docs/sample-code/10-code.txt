@@ -1,0 +1,658 @@
+Chapter 10 SQL Expressions
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+10.1 Components of SQL Expressions
+
+SELECT Name, Population FROM Country;
+
+SELECT 14, -312.82, 4.32E-03, 'I am a string';
+
+SELECT CURDATE(), VERSION();
+
+SELECT Name,
+TRUNCATE(Population/SurfaceArea,2) AS 'people/sq. km',
+IF(GNP > GNPOld,'Increasing','Not increasing') AS 'GNP Trend'
+FROM Country ORDER BY Name LIMIT 10;
+
+10.2 Numeric Expressions
+
+SELECT 1.1 + 2.2 = 3.3, 1.1E0 + 2.2E0 = 3.3E0;
+
+SELECT 1 + '1', 1 = '1';
+
+10.3 String Expressions
+
+SELECT CONCAT('abc','def',REPEAT('X',3));
+
+SELECT 'abc' || 'def';
+
+SET sql_mode = 'PIPES_AS_CONCAT';
+
+SELECT 'abc' || 'def';
+
+10.3.1 Case Sensitivity in String Comparisons
+
+SELECT 'Hello' = 'hello';
+
+SELECT 'Müller' = 'Mueller';
+SET collation_connection = latin1_german2_ci;
+SELECT 'Müller' = 'Mueller';
+
+SELECT BINARY 'Hello' = 'hello';
+SELECT 'Hello' = BINARY 'hello';
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (c CHAR(10));
+INSERT INTO t (c) VALUES('Hello'),('goodbye'),('Bonjour'),('au revoir');
+SELECT c FROM t;
+
+SELECT c FROM t ORDER BY c;
+
+ALTER TABLE t MODIFY c CHAR(10) BINARY;
+SELECT c FROM t ORDER BY c;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (c CHAR(10));
+INSERT INTO t (c) VALUES('Hello'),('hello'),('Goodbye'),('goodbye');
+SELECT c FROM t;
+
+SELECT c, COUNT(*) FROM t GROUP BY c;
+SELECT DISTINCT c FROM t;
+
+ALTER TABLE t MODIFY c CHAR(10) BINARY;
+SELECT c, COUNT(*) FROM t GROUP BY c;
+SELECT DISTINCT c FROM t;
+
+SELECT UPPER('AbCd'), LOWER('AbCd');
+
+SELECT UPPER(BINARY 'AbCd'), LOWER(BINARY 'AbCd');
+
+SELECT UPPER(CONVERT(BINARY 'AbCd' USING latin1));
+
+SELECT MD5('a');
+SELECT MD5('A');
+
+10.3.2 Using LIKE for Pattern Matching
+
+SELECT RAND(), RAND();
+
+SELECT 'ABC' LIKE 'abc', 'ABC' LIKE BINARY 'abc';
+
+SELECT 'ABC' LIKE 'A%', 'ABC' NOT LIKE 'A%';
+
+DROP TABLE IF EXISTS patlist;
+CREATE TABLE patlist (pattern CHAR(10), description CHAR(30));
+INSERT INTO patlist VALUES('','empty string');
+INSERT INTO patlist VALUES('_%','non-empty string');
+INSERT INTO patlist VALUES('___','string of exactly 3 characters');
+SELECT pattern, description FROM patlist;
+
+SELECT description, IF('' LIKE pattern,'YES','NO')
+FROM patlist;
+SELECT description, IF('abc' LIKE pattern,'YES','NO')
+FROM patlist;
+SELECT description, IF('hello' LIKE pattern,'YES','NO')
+FROM patlist;
+
+SELECT 'AA' LIKE 'A%', 'AA' LIKE 'A\%', 'A%' LIKE 'A\%';
+SELECT 'AA' LIKE 'A_', 'AA' LIKE 'A\_', 'A_' LIKE 'A\_';
+
+SELECT 'AA' LIKE 'A@%' ESCAPE '@', 'A%' LIKE 'A@%' ESCAPE '@';
+
+10.4 Temporal Expressions
+
+SELECT '2010-01-01' + INTERVAL 10 DAY, INTERVAL 10 DAY + '2010-01-01';
+
+SELECT '2010-01-01' - INTERVAL 10 DAY;
+
+10.5 NULL Values
+
+SELECT NULL + 1, NULL < 1;
+
+SELECT NULL = 1, NULL != NULL;
+
+SELECT NULL LIKE '%', 'abc' LIKE NULL;
+
+SELECT NULL IS NULL, NULL IS NOT NULL;
+
+SELECT 1 <=> NULL, 0 <=> NULL, NULL <=> NULL;
+
+10.6 Functions in SQL Expressions
+
+SELECT PI ();
+
+SET sql_mode = 'IGNORE_SPACE';
+
+SELECT PI ();
+
+10.6.1 Comparison Functions
+
+SELECT LEAST(4,3,8,-1,5), LEAST('cdef','ab','ghi');
+SELECT GREATEST(4,3,8,-1,5), GREATEST('cdef','ab','ghi');
+
+SELECT INTERVAL(2,1,2,3,4);
+SELECT INTERVAL(0,1,2,3,4);
+SELECT INTERVAL(6.3,2,4,6,8,10);
+
+10.6.2 Control Flow Functions
+
+SELECT IF(1 > 0, 'yes','no');
+
+SET @val = 1;
+SELECT CASE @val
+  WHEN 0 THEN '@val is 0'
+  WHEN 1 THEN '@val is 1'
+  ELSE '@val is not 0 or 1'
+END AS result;
+
+SET @val = NULL;
+SELECT CASE
+  WHEN @val IS NULL THEN '@val is NULL'
+  WHEN @val < 0 THEN '@val is less than 0'
+  WHEN @val > 0 THEN '@val is greater than 0'
+  ELSE '@val is 0'
+END AS result;
+
+10.6.4 Mathematical Functions
+
+SELECT ROUND(28.5), ROUND(-28.5);
+
+SELECT ROUND(2.85E1), ROUND(-2.85E1);
+
+SELECT FLOOR(-14.7), FLOOR(14.7);
+SELECT CEILING(-14.7), CEILING(14.7);
+
+SELECT ABS(-14.7), ABS(14.7);
+SELECT SIGN(-14.7), SIGN(14.7), SIGN(0);
+
+SELECT SIN(0), COS(0), TAN(0);
+SELECT PI(), DEGREES(PI()), RADIANS(180);
+
+SELECT RAND(), RAND(), RAND();
+
+10.6.5 String Functions
+
+SET @s = CONVERT('MySQL' USING latin1);
+SELECT LENGTH(@s), CHAR_LENGTH(@s);
+
+SET @s = CONVERT('MySQL' USING ucs2);
+SELECT LENGTH(@s), CHAR_LENGTH(@s);
+
+SELECT CONCAT('aa','bb','cc','dd');
+SELECT CONCAT_WS('aa','bb','cc','dd');
+
+SELECT CONCAT('/','a',NULL,'b'), CONCAT_WS('/','a',NULL,'b');
+
+SELECT STRCMP('abc','def'), STRCMP('def','def'), STRCMP('def','abc');
+
+10.6.6 Temporal Functions
+
+SET @d = '2010-04-15', @t = '09:23:57';
+SELECT YEAR(@d), MONTH(@d), DAYOFMONTH(@d);
+SELECT DAYOFYEAR(@d);
+SELECT HOUR(@t), MINUTE(@t), SECOND(@t);
+
+SELECT MAKEDATE(2010,105);
+
+SELECT MAKETIME(9,23,57);
+
+SELECT CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP;
+
+10.6.7 NULL-Related Functions
+
+SELECT ISNULL(NULL), ISNULL(0), ISNULL(1);
+
+SELECT IFNULL(NULL,'a'), IFNULL(0,'b');
+
+SELECT CONCAT('a','b'), CONCAT('a',NULL,'b');
+
+SELECT CONCAT_WS('/','a','b'), CONCAT_WS('/','a',NULL,'b');
+
+10.7 Comments in SQL Statements
+
+CREATE TABLE t (i INT) /*! ENGINE = MEMORY */;
+
+SHOW /*!50002 FULL */ TABLES;
+
+10.8 Exercises
+
+Question 1:
+
+SELECT CONCAT(IF(IndepYear IS NOT NULL,
+CONCAT(Name, ' became independent in ', IndepYear),
+CONCAT(Name, ' is not independent')), '.')
+AS 'Independent or not?'
+FROM Country LIMIT 10;
+
+Question 2:
+
+SELECT 3.1415 + 0.9585 = 4.1, 3.1415E0 + 0.9585E0 = 4.1E0;
+
+Question 3:
+
+SELECT "Let's see whether this works.";
+
+SELECT "Let's see whether this works.";
+
+Answer 3:
+
+SELECT @@sql_mode;
+
+SELECT "Let's see whether this works.";
+
+SET sql_mode = 'ANSI_QUOTES';
+
+SELECT @@sql_mode;
+
+SELECT "Let's see whether this works.";
+
+Question 4:
+
+SET collation_connection = latin1_swedish_ci;
+SET @str1 = 'Hühner-Hugos Hähnchen sind schön.';
+SET @str2 = 'Huehner-Hugos Haehnchen sind schoen.';
+SELECT @str1 = @str2;
+
+SET collation_connection = latin1_german2_ci;
+SET @str1 = 'Hühner-Hugos Hähnchen sind schön.';
+SET @str2 = 'Huehner-Hugos Haehnchen sind schoen.';
+SELECT @str1 = @str2;
+
+Answer 4:
+
+SELECT @@collation_connection;
+
+SET collation_connection = latin1_swedish_ci;
+SET @str1 = 'Hühner-Hugos Hähnchen sind schön.';
+SET @str2 = 'Huehner-Hugos Haehnchen sind schoen.';
+SELECT @str1 = @str2;
+
+SET collation_connection = latin1_german2_ci;
+
+SELECT @@collation_connection;
+
+SET @str1 = 'Hühner-Hugos Hähnchen sind schön.';
+SET @str2 = 'Huehner-Hugos Haehnchen sind schoen.';
+SELECT @str1 = @str2;
+
+Question 5:
+
+SELECT 'Hello world!' = BINARY 'Hello world!';
+
+Answer 5:
+
+SELECT 'Hello world!' = BINARY 'Hello world!';
+
+Question 6:
+
+SELECT @var := BINARY 'Lennart';
+
+SELECT UPPER(@var);
+
+Answer 6:
+
+SELECT UPPER(CONVERT(@var USING latin1));
+
+Question 7:
+
+SELECT NOW ();
+
+SELECT NOW ();
+
+Answer 7:
+
+SET sql_mode = 'IGNORE_SPACE';
+
+SELECT @@sql_mode;
+
+SELECT NOW ();
+
+Answer 9:
+
+SELECT 1 + 1;
+
+Answer 10:
+
+SELECT 'Hello ', 'world!';
+
+Answer 11:
+
+SELECT '2002-02-08', '2003-02-08';
+
+Answer 12:
+
+SELECT '21:39:00', '12:00:00';
+
+Answer 13:
+
+SELECT name, age FROM mytable;
+
+Answer 14:
+
+SELECT NOW();
+
+Answer 15:
+
+SELECT DATE_FORMAT(NOW(),'%m/%d/%Y');
+
+Question 16:
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel (pid SMALLINT UNSIGNED NOT NULL UNIQUE,
+unit TINYINT UNSIGNED NOT NULL, salary DECIMAL(9,2) NOT NULL);
+INSERT INTO personnel VALUES
+(1,42,1500.00),
+(2,42,1700.00),
+(3,42,1950.00),
+(4,42,2300.00),
+(5,42,1900.00),
+(6,23,850.00),
+(7,23,1250.00),
+(8,23,1450.00),
+(9,23,1920.00),
+(10,42,2200.00),
+(11,23,2900.00),
+(12,23,1000.00),
+(13,42,2850.00);
+SELECT * FROM personnel;
+
+Answer 16:
+
+SELECT
+ pid AS PID,
+ salary AS 'Gross Salary',
+ salary * 0.4 AS Deduction,
+ salary * 0.6 AS 'Net Salary'
+FROM personnel
+;
+
+Answer 17:
+
+SELECT
+ unit AS Unit,
+ SUM(salary) AS 'Gross Salary',
+ SUM(salary) * 0.4 AS Deduction,
+ SUM(salary) * 0.6 AS 'Net Salary'
+FROM personnel
+GROUP BY unit
+;
+
+Answer 18:
+
+SELECT
+ pid AS PID,
+ salary as 'Gross Salary',
+ IF(salary < 2000, salary * 0.3, salary * 0.4) AS Deduction,
+ IF(salary < 2000, salary * 0.7, salary * 0.6) AS 'Net Salary'
+FROM personnel
+;
+
+Question 19:
+
+DROP TABLE IF EXISTS personnel;
+CREATE TABLE personnel (pid SMALLINT UNSIGNED NOT NULL UNIQUE,
+unit TINYINT UNSIGNED NOT NULL, salary DECIMAL(9,2) NOT NULL);
+INSERT INTO personnel VALUES
+(1,42,1500.00),
+(2,42,1700.00),
+(3,42,1950.00),
+(4,42,2300.00),
+(5,42,1900.00),
+(6,23,850.00),
+(7,23,1250.00),
+(8,23,1450.00),
+(9,23,1920.00),
+(10,42,2200.00),
+(11,23,2900.00),
+(12,23,1000.00),
+(13,42,2850.00);
+SELECT * FROM personnel;
+
+Answer 19:
+
+SELECT
+ SUM(salary) AS Salary,
+ SUM(salary) * 1.1 AS 'New Salary',
+ SUM(salary) * 0.1 AS 'Cost Rise'
+FROM personnel
+;
+
+Answer 20:
+
+SELECT
+ SUM(salary) AS Salary,
+ SUM(salary) * IF(unit = 23, 1.1, 1.05) AS 'New Salary',
+ SUM(salary) * IF(unit = 23, 0.1, 0.05) AS 'Cost Rise'
+FROM personnel
+GROUP BY unit
+;
+
+Question 21:
+
+DROP TABLE IF EXISTS leonardo;
+CREATE TABLE leonardo (name CHAR(7));
+INSERT INTO leonardo VALUES
+('Lennart'),
+('lennart'),
+('LENNART'),
+('lEnNaRt');
+DESCRIBE leonardo;
+SELECT * FROM leonardo;
+
+SELECT DISTINCT name FROM leonardo;
+
+SELECT name, COUNT(*) FROM leonardo GROUP BY name;
+
+SELECT name, COUNT(*) FROM leonardo;
+
+Answer 21:
+
+SELECT DISTINCT name FROM leonardo;
+
+SELECT name, COUNT(*) FROM leonardo GROUP BY name;
+
+SELECT name, COUNT(*) FROM leonardo;
+
+Question 22:
+
+DROP TABLE IF EXISTS leonardo;
+CREATE TABLE leonardo (name BINARY(7));
+INSERT INTO leonardo VALUES
+('Lennart'),
+('lennart'),
+('LENNART'),
+('lEnNaRt');
+DESCRIBE leonardo;
+SELECT * FROM leonardo;
+
+SELECT DISTINCT name FROM leonardo;
+
+SELECT name, COUNT(*) FROM leonardo GROUP BY name;
+
+SELECT name, COUNT(*) FROM leonardo;
+
+Answer 22:
+
+SELECT DISTINCT name FROM leonardo;
+
+SELECT name, COUNT(*) FROM leonardo GROUP BY name;
+
+SELECT name, COUNT(*) FROM leonardo;
+
+Question 24:
+
+SELECT MD5('lennart') = MD5('LENNART');
+
+SELECT MD5('lennart'), MD5('LENNART');
+
+Question 26:
+
+SELECT 'abc' LIKE '%___%';
+
+Question 27:
+
+SELECT 'abc' LIKE '%_____%';
+
+Question 28:
+
+SELECT '' LIKE '%';
+
+Question 29:
+
+SELECT '' LIKE ' % ';
+
+Question 30:
+
+SELECT '%' LIKE ' % ';
+
+Question 31:
+
+SELECT ' % ' LIKE '%';
+
+Question 32:
+
+SELECT 'Lennart' LIKE '_e%_t';
+
+Question 33:
+
+SELECT 'Lennart' LIKE '_e%';
+
+Question 34:
+
+SELECT NULL LIKE NULL;
+
+Question 35:
+
+SELECT NULL LIKE '%';
+
+Question 36:
+
+SELECT 'NULL' LIKE '%';
+
+Question 37:
+
+SELECT BINARY 'NULL' LIKE 'null';
+
+Question 38:
+
+SELECT '2002-02-08' LIKE '2002%';
+
+Question 39:
+
+SELECT 23.42 LIKE '2%2';
+
+Question 40:
+
+SELECT 023.420 LIKE '2%2';
+
+Question 41:
+
+DROP TABLE IF EXISTS CityList;
+CREATE TABLE CityList (
+ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+Name CHAR(35) NOT NULL,
+Country CHAR(3) NOT NULL,
+District CHAR(20) NOT NULL,
+Population INT NOT NULL DEFAULT 0
+);
+INSERT INTO CityList SELECT ID, Name, CountryCode AS Country,
+District, Population FROM City;
+
+DESCRIBE CityList;
+
+Answer 41:
+
+SELECT Name AS City, Country, Population
+  FROM CityList
+ WHERE Country IN('DEU','DNK','USA')
+   AND POPULATION BETWEEN 400000 AND 500000
+ ORDER BY Population DESC
+;
+
+Question 42:
+
+SELECT NULL == NULL;
+
+Answer 42:
+
+SELECT NULL == NULL;
+
+Question 43:
+
+SELECT NULL = NULL = NULL;
+
+Answer 43:
+
+SELECT NULL = NULL = NULL;
+
+Question 44:
+
+SELECT NULL = NULL = 0;
+
+Answer 44:
+
+SELECT NULL = NULL = 0;
+
+Question 45:
+
+SELECT NULL IS NOT 0;
+
+Answer 45:
+
+SELECT NULL IS NOT 0;
+
+Question 46:
+
+SELECT 0 IS NOT NULL;
+
+Answer 46:
+
+SELECT 0 IS NOT NULL;
+
+Question 47:
+
+SELECT 0 <=> 1;
+
+Answer 47:
+
+SELECT 0 <=> 1;
+
+Question 48:
+
+INSERT /*! DELAYED */ INTO mytable VALUES (5);
+
+Question 49:
+
+SELECT * FROM mytable WHERE id < 100 /*!40000 FOR UPDATE */;
+
+Question 50:
+
+CREATE /*32303 TEMPORARY */ TABLE tbl (col INT);
+
+Question 51:
+
+SELECT * FROM mytable; // * is not good style, though
+
+Question 52:
+
+SELECT a, b, c FROM tbl; --different column list needed?
+
+Question 54:
+
+SELECT ROUND(1.5), ROUND(-1.5);
+
+Answer 54:
+
+SELECT ROUND(1.5), ROUND(-1.5);

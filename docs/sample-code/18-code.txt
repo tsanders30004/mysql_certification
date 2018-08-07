@@ -1,0 +1,331 @@
+Chapter 18 Stored Procedures and Functions
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+SET GLOBAL log_bin_trust_routine_creators = 1;
+
+18.4 Defining Stored Routines
+
+DROP PROCEDURE IF EXISTS world_record_count;
+delimiter //
+CREATE PROCEDURE world_record_count ()
+BEGIN
+  SELECT 'Country', COUNT(*) FROM Country;
+  SELECT 'City', COUNT(*) FROM City;
+  SELECT 'CountryLanguage', COUNT(*) FROM CountryLanguage;
+END;
+//
+
+delimiter ;
+
+18.5 Creating Stored Routines
+
+DROP PROCEDURE IF EXISTS rect_area;
+DROP FUNCTION IF EXISTS circle_area;
+
+CREATE PROCEDURE rect_area (width INT, height INT)
+  SELECT width * height AS area;
+
+CREATE FUNCTION circle_area (radius FLOAT)
+  RETURNS FLOAT
+  RETURN PI() * radius * radius;
+
+18.5.1 Compound Statements
+
+DROP PROCEDURE IF EXISTS world_record_count;
+CREATE PROCEDURE world_record_count ()
+BEGIN
+  SELECT 'Country', COUNT(*) FROM Country;
+  SELECT 'City', COUNT(*) FROM City;
+  SELECT 'CountryLanguage', COUNT(*) FROM CountryLanguage;
+END;
+
+BEGIN
+  inner_block: BEGIN
+    IF DAYNAME(NOW()) = 'Wednesday' THEN
+      LEAVE inner_block;
+    END IF;
+    SELECT 'Today is not Wednesday';
+  END inner_block;
+END;
+
+18.5.2 Declaring Parameters
+
+DROP FUNCTION IF EXISTS tax;
+CREATE FUNCTION tax (cost DECIMAL(10,2), tax_rate DECIMAL(10,2))
+  RETURNS DECIMAL(10,4)
+  RETURN cost * tax_rate;
+
+CREATE PROCEDURE param_test (IN p_in INT,
+                             OUT p_out INT,
+                             INOUT p_inout INT)
+BEGIN
+  SELECT p_in, p_out, p_inout;
+  SET p_in = 100, p_out = 200, p_inout = 300;
+END;
+
+SET @v_in = 0, @v_out = 0, @v_inout = 0;
+
+CALL param_test(@v_in, @v_out, @v_inout);
+
+SELECT @v_in, @v_out, @v_inout;
+
+18.5.4.1 Assigning Variable Values with SET
+
+DECLARE var1, var2, var3 INT;
+SET var1 = 1, var2 = 2;
+SET var3 = var1 + var2;
+
+18.5.4.2 Assigning Variable Values with SELECT ... INTO
+
+DECLARE name_var CHAR(52);
+DECLARE pop_var INT;
+SELECT Name, Population INTO name_var, pop_var
+  FROM Country WHERE Code = 'ESP';
+
+18.5.5 Conditions and Handlers
+
+DROP TABLE IF EXISTS unique_names;
+DROP TABLE IF EXISTS dup_names;
+
+CREATE TABLE unique_names
+(
+    name CHAR(20) NOT NULL PRIMARY KEY
+);
+CREATE TABLE dup_names
+(
+    name CHAR(20) NOT NULL
+);
+
+DROP PROCEDURE IF EXISTS add_name;
+CREATE PROCEDURE add_name (name_param CHAR(20))
+BEGIN
+  DECLARE EXIT HANDLER FOR SQLSTATE '23000'
+  BEGIN
+    INSERT INTO dup_names (name) VALUES(name_param);
+    SELECT 'duplicate key found, inserted into dup_names' AS result;
+  END;
+
+  INSERT INTO unique_names (, name) VALUES(name_param);
+  SELECT 'row inserted successfully into unique_names' AS result;
+END;
+
+
+CALL add_name ('my name');
+
+CALL add_name ('my name');
+
+DECLARE dup_key CONDITION FOR SQLSTATE '23000';
+
+DECLARE null_not_allowed CONDITION FOR SQLSTATE '23000';
+DECLARE null_not_allowed CONDITION FOR 1048;
+
+DECLARE CONTINUE HANDLER FOR SQLWARNING BEGIN END;
+
+18.5.6 Cursors
+
+DECLARE CONTINUE HANDLER FOR SQLSTATE '02000' statement;
+
+BEGIN
+  DECLARE row_count INT DEFAULT 0;
+  DECLARE code_var CHAR(3);
+  DECLARE name_var CHAR(52);
+  DECLARE c CURSOR FOR
+    SELECT Code, Name FROM Country WHERE Continent = 'Africa';
+  OPEN c;
+  BEGIN
+    DECLARE EXIT HANDLER FOR SQLSTATE '02000' BEGIN END;
+    LOOP
+      FETCH c INTO code_var, name_var;
+      SET row_count = row_count + 1;
+    END LOOP;
+  END;
+  CLOSE c;
+  SELECT 'number of rows fetched =', row_count;
+END;
+
+BEGIN
+  DECLARE exit_flag INT DEFAULT 0;
+  DECLARE row_count INT DEFAULT 0;
+  DECLARE code_var CHAR(3);
+  DECLARE name_var CHAR(52);
+  DECLARE c CURSOR FOR
+    SELECT Code, Name FROM Country WHERE Continent = 'Africa';
+  DECLARE CONTINUE HANDLER FOR SQLSTATE '02000' SET exit_flag = 1;
+  OPEN c;
+  fetch_loop: LOOP
+    FETCH c INTO code_var, name_var;
+    IF exit_flag THEN LEAVE fetch_loop; END IF;
+    SET row_count = row_count + 1;
+  END LOOP;
+  CLOSE c;
+  SELECT 'number of rows fetched =', row_count;
+END;
+
+18.5.7 Retrieving Multiple Result Sets
+
+CALL world_record_count();
+
+18.5.8.1 Conditional Testing
+
+IF val IS NULL
+  THEN SELECT 'val is NULL';
+  ELSE SELECT 'val is not NULL';
+END IF;
+
+CASE val
+  WHEN 0 THEN SELECT 'val is 0';
+  WHEN 1 THEN SELECT 'val is 1';
+  ELSE SELECT 'val is not 0 or 1';
+END CASE;
+
+CASE
+  WHEN val IS NULL THEN SELECT 'val is NULL';
+  WHEN val < 0 THEN SELECT 'val is less than 0';
+  WHEN val > 0 THEN SELECT 'val is greater than 0';
+  ELSE SELECT 'val is 0';
+END CASE;
+
+18.5.8.2 Loop Construction
+
+DECLARE i INT DEFAULT 0;
+my_loop: LOOP
+  SET i = i + 1;
+  IF i >= 10 THEN
+    LEAVE my_loop;
+  END IF;
+END LOOP my_loop;
+
+DECLARE i INT DEFAULT 0;
+REPEAT
+  SET i = i + 1;
+UNTIL i >= 10
+END REPEAT;
+
+DECLARE i INT DEFAULT 0;
+WHILE i < 10 DO
+  SET i = i + 1;
+END WHILE;
+
+WHILE 1 = 0 DO
+  SET x = 1;
+END WHILE;
+
+18.5.8.3 Transfer of Control
+
+DECLARE i INT DEFAULT 0;
+my_loop: LOOP
+  SET i = i + 1;
+  IF i < 10 THEN ITERATE my_loop;
+  ELSEIF i > 20 THEN LEAVE my_loop;
+  END IF;
+  SELECT 'i is between 10 and 20';
+END LOOP my_loop;
+
+DROP FUNCTION IF EXISTS countryname;
+CREATE FUNCTION countryname(code_param CHAR(3))
+RETURNS CHAR(52)
+BEGIN
+  DECLARE name_var CHAR(52);
+  SELECT Name INTO name_var FROM Country WHERE Code=code_param;
+  RETURN name_var;
+END;
+
+18.6 Altering Stored Routines
+
+ALTER FUNCTION f
+  SQL SECURITY INVOKER
+  COMMENT 'this function has invoker security';
+
+18.8 Invoking Stored Routines
+
+DROP PROCEDURE IF EXISTS rect_area;
+CREATE PROCEDURE rect_area (width INT, height INT)
+  SELECT width * height AS area;
+
+CALL rect_area(10,25);
+
+DROP FUNCTION IF EXISTS circle_area;
+CREATE FUNCTION circle_area (radius FLOAT)
+  RETURNS FLOAT
+  RETURN PI() * radius * radius;
+
+SELECT circle_area(10);
+
+18.9 Obtaining Stored Routine Metadata
+
+SELECT * FROM INFORMATION_SCHEMA.ROUTINES
+WHERE ROUTINE_NAME = 'world_record_count'
+AND ROUTINE_SCHEMA = 'world'\G
+
+SHOW PROCEDURE STATUS LIKE 'w%';
+SHOW FUNCTION STATUS;
+
+SHOW CREATE PROCEDURE world_record_count;
+SHOW CREATE FUNCTION add3;
+
+18.10 Stored Routine Privileges and Execution Security
+
+GRANT ALL ON world.* TO 'magellan'@'localhost';
+
+GRANT EXECUTE, ALTER ROUTINE ON PROCEDURE world.world_record_count
+  TO 'magellan'@'localhost';
+
+18.11 Exercises
+
+Answer 3:
+
+CREATE PROCEDURE world.world_record_count ...
+
+Answer 4:
+
+SQL SECURITY INVOKER
+
+Answer 15:
+
+SELECT ROUTINE_NAME, ROUTINE_DEFINITION
+FROM INFORMATION_SCHEMA.ROUTINES
+WHERE ROUTINE_SCHEMA = 'world'
+  AND ROUTINE_NAME = 'world_record_count'
+\G
+
+SHOW CREATE PROCEDURE world.world_record_count\G
+
+SHOW PROCEDURE STATUS LIKE 'world_record_count'\G
+
+Question 17:
+
+DROP PROCEDURE IF EXISTS incrementor;
+DROP PROCEDURE IF EXISTS loop_test;
+delimiter //
+CREATE PROCEDURE incrementor (OUT i INT)
+BEGIN
+  REPEAT
+    SET i = i + 1;
+  UNTIL i > 9
+  END REPEAT;
+END;
+//
+
+CREATE PROCEDURE loop_test ()
+BEGIN
+  DECLARE value INT default 0;
+  CALL incrementor(value);
+  SELECT value; /* What value is shown here? */
+END;
+//
+
+delimiter ;
+
+CALL loop_test();

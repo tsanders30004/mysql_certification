@@ -1,0 +1,5 @@
+MySQL 5.6 Certification Websites
+
+https://decebalonprogramming.net/post/mysql-56-certification-first-step/
+http://pattersonconsulting.ie/2014/05/mysql-5-6-developer-exam-topics/
+https://www.amazon.com/Oracle-Developer-ExamFOCUS-Questions-1z0-882/dp/1982029153

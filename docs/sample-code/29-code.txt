@@ -1,0 +1,272 @@
+Chapter 29 Storage Engines
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+29.1 MySQL Storage Engines
+
+CREATE TABLE t (i INT) ENGINE = InnoDB;
+
+SHOW CREATE TABLE City\G
+
+SHOW TABLE STATUS LIKE 'CountryLanguage'\G
+
+SELECT TABLE_NAME, ENGINE FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world';
+
+SHOW ENGINES\G
+
+29.3 The MERGE Engine
+
+DROP TABLE IF EXISTS NACountry, SACountry, NorthAndSouth;
+
+CREATE TABLE NACountry SELECT Code, Name
+FROM Country WHERE Continent = 'North America';
+
+CREATE TABLE SACountry SELECT Code, Name
+FROM Country WHERE Continent = 'South America';
+
+DESCRIBE NACountry;
+
+CREATE TABLE NorthAndSouth
+(Code CHAR(3) NOT NULL, Name CHAR(52) NOT NULL)
+ENGINE = MERGE UNION = (NACountry, SACountry);
+
+SELECT COUNT(*) FROM NACountry;
+
+SELECT COUNT(*) FROM SACountry;
+
+SELECT COUNT(*) FROM NorthAndSouth;
+
+29.4.6 Using Foreign Keys
+
+DROP TABLE IF EXISTS CityChild, CountryParent;
+
+CREATE TABLE CountryParent
+(
+    Code CHAR(3) NOT NULL,
+    Name CHAR(52) NOT NULL,
+    PRIMARY KEY (Code)
+) ENGINE = InnoDB;
+
+CREATE TABLE CityChild
+(
+    ID          INT NOT NULL AUTO_INCREMENT,
+    Name        CHAR(35) NOT NULL,
+    CountryCode CHAR(3) NOT NULL,
+    PRIMARY KEY (ID),
+    INDEX (CountryCode),
+    FOREIGN KEY (CountryCode)
+        REFERENCES CountryParent (Code)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+INSERT INTO CountryParent SELECT Code, Name FROM Country;
+
+INSERT INTO CityChild SELECT ID, Name, CountryCode FROM City;
+
+SELECT * FROM CountryParent AS P, CityChild AS C
+WHERE P.Code = C.CountryCode AND P.Name = 'Croatia';
+
+UPDATE CountryParent SET Code = 'xxx' WHERE Name = 'Croatia';
+
+SELECT * FROM CountryParent WHERE Code = 'xxx';
+
+SELECT * FROM CityChild WHERE CountryCode = 'xxx';
+
+DELETE FROM CountryParent WHERE Name = 'Croatia';
+
+SELECT * FROM CountryParent WHERE Code = 'xxx';
+
+SELECT * FROM CityChild WHERE CountryCode = 'xxx';
+
+
+SHOW ENGINE INNODB STATUS\G
+
+SHOW TABLE STATUS LIKE 'CountryList'\G
+
+29.6 The FEDERATED Engine
+
+CREATE TABLE City
+(
+    ID          INT NOT NULL AUTO_INCREMENT,
+    Name        CHAR(35) NOT NULL,
+    CountryCode CHAR(3) NOT NULL,
+    District    CHAR(20) NOT NULL,
+    Population  INT NOT NULL,
+    PRIMARY KEY (ID)
+) ENGINE = MyISAM;
+
+
+CREATE TABLE FedCity
+(
+    ID          INT NOT NULL AUTO_INCREMENT,
+    Name        CHAR(35) NOT NULL,
+    CountryCode CHAR(3) NOT NULL,
+    District    CHAR(20) NOT NULL,
+    Population  INT NOT NULL,
+    PRIMARY KEY (ID)
+)
+ENGINE=FEDERATED
+COMMENT='mysql://wuser:wpass@world.example.com/world/City';
+
+SELECT ID, Name, Population FROM FedCity
+WHERE CountryCode = 'EGY';
+
+29.9 Exercises
+
+Answer 4:
+
+SHOW CREATE TABLE world.City\G
+
+USE world; SHOW TABLE STATUS LIKE 'City'\G
+
+SELECT TABLE_NAME, ENGINE FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world' AND TABLE_NAME = 'City';
+
+Answer 12:
+
+Note: This example requires that the world tables be InnoDB tables.
+You can change them with ALTER TABLE tbl_name ENGINE = InnoDB
+and change them back to MyISAM with ALTER TABLE tbl_name ENGINE = MyISAM.
+
+START TRANSACTION;
+
+UPDATE City SET Name = 'Kabbul' WHERE Name LIKE 'Kab%';
+
+UPDATE City SET Name = 'Werbelina' WHERE Name LIKE 'Berl%';
+
+SAVEPOINT end_of_city_updates;
+
+UPDATE Country SET Code = 'zzz' WHERE Code = 'deu';
+
+ROLLBACK TO SAVEPOINT end_of_city_updates;
+
+COMMIT;
+
+Answer 16:
+
+ALTER TABLE Country ENGINE = InnoDB;
+
+ALTER TABLE CountryLanguage ENGINE = InnoDB;
+
+ALTER TABLE CountryLanguage
+ADD FOREIGN KEY (CountryCode)
+REFERENCES Country (Code) ON DELETE CASCADE;
+
+UPDATE Country SET Code = 'XYZ' WHERE Code = 'ABW';
+SELECT * FROM CountryLanguage WHERE CountryCode = 'ABW';
+
+DELETE FROM Country WHERE Code = 'ABW';
+
+SELECT * FROM CountryLanguage WHERE CountryCode = 'ABW';
+
+Answer 25:
+
+SHOW TABLE STATUS LIKE 't%';
+
+Question 26:
+
+START TRANSACTION;
+SELECT * FROM trans;
+INSERT INTO trans VALUES (1),(2),(3);
+
+SELECT * FROM trans;
+
+Question 27:
+
+SELECT COUNT(*) FROM CountryList;
+START TRANSACTION;
+DELETE FROM CountryList;
+SELECT COUNT(*) FROM CountryList;
+ROLLBACK;
+
+Question 31:
+
+INSERT DELAYED INTO City (ID, name) VALUES (20000, 'Delayne');
+SELECT ID, name FROM City WHERE ID = 20000;
+
+Answer 65:
+
+SHOW ENGINE INNODB STATUS\G
+
+Question 69:
+
+DROP TABLE IF EXISTS t, t2;
+CREATE TABLE t (i INT) ENGINE = InnoDB;
+CREATE TABLE t2 (i INT) ENGINE = InnoDB;
+START TRANSACTION;
+INSERT INTO t SET i = 1;
+DROP TABLE t2;
+ROLLBACK;
+
+Answer 69:
+
+SELECT i FROM t;
+
+Question 70:
+
+DROP TABLE IF EXISTS CountryList;
+CREATE TABLE CountryList SELECT Code, Name, IndepYear FROM Country
+WHERE 0;;
+DESCRIBE CountryList;
+SELECT * FROM CountryList;
+SET AUTOCOMMIT=0;
+INSERT INTO CountryList VALUES('XXX','XLand',2003);
+ROLLBACK;
+
+Question 71:
+
+DROP TABLE IF EXISTS CountryList;
+CREATE TABLE CountryList SELECT Code, Name, IndepYear FROM Country
+WHERE 0;;
+DESCRIBE CountryList;
+SELECT * FROM CountryList;
+SET AUTOCOMMIT=0;
+INSERT INTO CountryList VALUES('XXX','XLand',2003);
+START TRANSACTION;
+INSERT INTO CountryList VALUES('YYY','YLand',2004);
+ROLLBACK;
+
+Answer 71:
+
+SELECT * FROM CountryList;
+
+Question 72:
+
+DROP TABLE IF EXISTS CountryList;
+CREATE TABLE CountryList SELECT Code, Name, IndepYear FROM Country
+WHERE 0;;
+DESCRIBE CountryList;
+SELECT * FROM CountryList;
+SET AUTOCOMMIT=0;
+START TRANSACTION;
+START TRANSACTION;
+INSERT INTO CountryList VALUES('XXX','XLand',2003);
+COMMIT;
+INSERT INTO CountryList VALUES('YYY','YLand',2004);
+ROLLBACK;
+
+Answer 72:
+
+SELECT * FROM CountryList;
+
+Question 73:
+
+DESCRIBE CountryList;
+SELECT * FROM CountryList;
+SET AUTOCOMMIT=0;
+INSERT INTO CountryList VALUES('XXX','XLand',2003);
+INSERT INTO CountryList VALUES('YYY','YLand',2004);
+ROLLBACK;

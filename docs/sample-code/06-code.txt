@@ -1,0 +1,168 @@
+Chapter 6 Identifiers
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+6.3 Using Qualified Names
+
+SELECT * FROM Country;
+SELECT * FROM world.Country;
+
+SELECT Name FROM Country;
+SELECT Country.Name FROM Country;
+SELECT world.Country.Name FROM world.Country;
+
+6.4 Using Reserved Words as Identifiers
+
+CREATE TABLE t (order INT NOT NULL UNIQUE, d DATE NOT NULL);
+
+SELECT 1 AS INTEGER;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (`order` INT NOT NULL UNIQUE, d DATE NOT NULL);
+
+CREATE TABLE t ("order" INT NOT NULL UNIQUE, d DATE NOT NULL);
+
+SELECT 1 AS 'INTEGER';
+SELECT 1 AS "INTEGER";
+SELECT 1 AS `INTEGER`;
+
+INSERT INTO COUNT (id) VALUES(43);
+
+6.5 Exercises
+
+Question 1:
+
+SELECT
+  Name AS 'City Name',
+  Population AS c
+FROM City AS c
+WHERE Population > 1000000;
+
+SELECT
+  c.Name, c.Population
+FROM City AS C;
+
+SELECT
+  ciudad.Name AS `City Name`,
+  ciudad.Population AS "City Population"
+FROM City AS ciudad;
+
+Answer 2:
+
+SELECT @@SQL_MODE;
+SELECT "Name", "Population" FROM City LIMIT 1;
+
+SELECT 'Name', "Population" FROM `City` LIMIT 1;
+SET SQL_MODE = 'ANSI_QUOTES';
+SELECT @@SQL_MODE;
+SELECT 'Name', "Population" FROM `City` LIMIT 1;
+
+Question 3:
+
+CREATE TABLE select (id INT);
+
+Answer 3:
+
+CREATE TABLE select (id INT);
+
+Question 4:
+
+CREATE TABLE `select` (id INT);
+
+Answer 4:
+
+CREATE TABLE `select` (id INT);
+
+Question 5:
+
+CREATE TABLE 'select' (id INT);
+
+Answer 5:
+
+CREATE TABLE 'select' (id INT);
+
+Question 6:
+
+CREATE TABLE `select-me, please!` (id INT);
+
+Answer 6:
+
+CREATE TABLE `select-me, please!` (id INT);
+
+Question 7:
+
+CREATE TABLE `select.me.please` (id INT);
+
+Answer 7:
+
+CREATE TABLE `select.me.please` (id INT);
+
+Question 8:
+
+CREATE TABLE MD5 (id INT);
+
+Answer 8:
+
+CREATE TABLE MD5 (id INT);
+
+Question 9:
+
+CREATE TABLE `MD5()` (id INT);
+
+Answer 9:
+
+CREATE TABLE `MD5()` (id INT);
+
+Question 10:
+
+CREATE TABLE `MD5('Lennart')` (id INT);
+
+Answer 10:
+
+CREATE TABLE `MD5('Lennart')` (id INT);
+
+Question 11:
+
+CREATE TABLE `COUNT(*)` (id INT);
+
+Answer 11:
+
+CREATE TABLE `COUNT(*)` (id INT);
+
+Question 12:
+
+CREATE TABLE `0123456789` (id INT);
+
+Answer 12:
+
+CREATE TABLE `0123456789` (id INT);
+
+Question 13:
+
+CREATE DATABASE `0123456789`;
+
+Answer 13:
+
+CREATE DATABASE `0123456789`;
+
+Question 14:
+
+CREATE DATABASE CaseTest;
+USE casetest;
+
+USE casetest;
+
+Answer 14:
+
+USE CaseTest;

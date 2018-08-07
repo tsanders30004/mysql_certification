@@ -1,0 +1,40 @@
+Chapter 25 Client Programs for DBA Work
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+25.4 mysqladmin
+
+mysqladmin status variables
+
+mysqladmin -u root -p shutdown
+
+25.8 Exercises
+
+Answer 3:
+
+SHOW PROCESSLIST;
+
+KILL 789;
+
+SHOW PROCESSLIST;
+
+mysqladmin processlist
+mysqladmin kill 781
+mysqladmin processlist
+
+Answer 7:
+
+mysqladmin create landmarks
+
+CREATE DATABASE landmarks;

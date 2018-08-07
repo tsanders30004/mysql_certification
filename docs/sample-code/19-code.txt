@@ -1,0 +1,85 @@
+Chapter 19 Triggers
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+DROP TABLE IF EXISTS Capital;
+CREATE TABLE Capital
+SELECT Country.Name AS Country, City.Name AS Capital,
+City.Population
+FROM Country, City
+WHERE Country.Capital = City.ID;
+
+19.2 Trigger Concepts
+
+CREATE TRIGGER Capital_bi
+  BEFORE INSERT
+  ON Capital
+  FOR EACH ROW
+    SET NEW.Population = 
+      IF(NEW.Population < 0, 0, TRUNCATE(NEW.Population,-3));
+
+DROP TABLE IF EXISTS Capital;
+CREATE TABLE Capital
+SELECT Country.Name AS Country, City.Name AS Capital,
+City.Population
+FROM Country, City
+WHERE Country.Capital = City.ID;
+delimiter //
+CREATE TRIGGER Capital_bi
+  BEFORE INSERT
+  ON Capital
+  FOR EACH ROW
+       SET NEW.Population = 
+         IF(NEW.Population < 0, 0, TRUNCATE(NEW.Population,-3));
+//
+delimiter ;
+
+INSERT INTO Capital VALUES
+('CountryA','CityA',-39),
+('CountryB','CityB',123456);
+
+SELECT * FROM Capital
+WHERE Country IN ('CountryA','CountryB');
+
+19.3 Creating a Trigger
+
+DROP TABLE IF EXISTS Capital;
+CREATE TABLE Capital
+SELECT Country.Name AS Country, City.Name AS Capital,
+City.Population
+FROM Country, City
+WHERE Country.Capital = City.ID;
+
+delimiter //
+CREATE TRIGGER Capital_bu
+  BEFORE UPDATE
+  ON Capital
+  FOR EACH ROW
+  BEGIN
+    SET @country = OLD.Country;
+    SET @capital_old = OLD.Capital;
+    SET @capital_new = NEW.Capital;
+ END;
+//
+
+delimiter ;
+UPDATE Capital SET Capital = 'Washington D.C.'
+WHERE Country = 'United States';
+
+SELECT @country AS Country, @capital_old AS 'Old capital',
+@capital_new AS 'New capital';
+
+19.6 Destroying a Trigger
+
+DROP TRIGGER Capital.Capital_bi;

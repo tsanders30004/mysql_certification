@@ -1,0 +1,276 @@
+Chapter 14 Views
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+14.2 Creating Views
+
+DROP VIEW IF EXISTS CityView;
+CREATE VIEW CityView AS SELECT ID, Name FROM City;
+
+SELECT * FROM CityView;
+
+
+DROP VIEW IF EXISTS CityView;
+CREATE VIEW CityView AS SELECT ID, Name FROM City;
+
+CREATE OR REPLACE VIEW CityView AS SELECT ID, Name FROM City;
+
+DROP VIEW IF EXISTS v;
+CREATE VIEW v (CountryName, CityName)
+AS SELECT Country.Name, City.Name
+FROM Country, City WHERE Code = CountryCode;
+
+
+DROP VIEW IF EXISTS CountryLangCount;
+
+CREATE VIEW CountryLangCount AS
+SELECT Name, COUNT(Language)
+FROM Country, CountryLanguage WHERE Code = CountryCode
+GROUP BY Name;
+
+DESCRIBE CountryLangCount;
+
+DROP VIEW IF EXISTS CountryLangCount;
+CREATE VIEW CountryLangCount (Name, LangCount) AS
+SELECT Name, COUNT(Language)
+FROM Country, CountryLanguage WHERE Code = CountryCode
+GROUP BY Name;
+
+DESCRIBE CountryLangCount;
+
+
+DROP VIEW IF EXISTS CountryLangCount;
+CREATE VIEW CountryLangCount AS
+SELECT Name, COUNT(Language) AS LangCount
+FROM Country, CountryLanguage WHERE Code = CountryCode
+GROUP BY Name;
+
+14.2.2 View Algorithms
+
+DROP VIEW IF EXISTS v;
+CREATE ALGORITHM = UNDEFINED VIEW v AS
+SELECT Name, GNP - GNPOld AS GNPDiff
+FROM Country WHERE GNPOld IS NOT NULL;
+
+SELECT Name, GNPDiff FROM v WHERE GNPDiff > 0;
+
+SELECT Name, GNP - GNPOld AS GNPDiff
+FROM Country WHERE (GNP - GNPOld > 0) AND (GNPOld IS NOT NULL);
+
+DROP VIEW IF EXISTS v;
+CREATE VIEW v AS
+  SELECT CountryCode, COUNT(*) AS LangCount
+  FROM CountryLanguage GROUP BY CountryCode;
+
+SELECT MAX(LangCount) FROM v;
+
+SELECT MAX(COUNT(*))
+  FROM CountryLanguage GROUP BY CountryCode;
+
+CREATE TEMPORARY TABLE tmp_table
+  SELECT CountryCode, COUNT(*) AS LangCount
+  FROM CountryLanguage GROUP BY CountryCode;
+
+SELECT MAX(LangCount) FROM tmp_table;
+
+DROP TABLE tmp_table;
+
+14.2.3 Updatable Views
+
+DROP TABLE IF EXISTS CountryPop;
+CREATE TABLE CountryPop
+SELECT Name, Population, Continent FROM Country;
+
+DROP VIEW IF EXISTS EuropePop;
+CREATE VIEW EuropePop AS
+SELECT Name, Population FROM CountryPop
+WHERE Continent = 'Europe';
+
+SELECT * FROM EuropePop WHERE Name = 'San Marino';
+
+UPDATE EuropePop SET Population = Population + 1
+WHERE Name = 'San Marino';
+
+SELECT * FROM EuropePop WHERE Name = 'San Marino';
+
+SELECT * FROM CountryPop WHERE Name = 'San Marino';
+
+DELETE FROM EuropePop WHERE Name = 'San Marino';
+
+SELECT * FROM EuropePop WHERE Name = 'San Marino';
+
+SELECT * FROM CountryPop WHERE Name = 'San Marino';
+
+DROP VIEW IF EXISTS LargePop;
+CREATE VIEW LargePop AS
+SELECT Name, Population FROM CountryPop
+WHERE Population >= 100000000
+WITH CHECK OPTION;
+
+SELECT * FROM LargePop;
+
+UPDATE LargePop SET Population = Population + 1
+WHERE Name = 'Nigeria';
+
+SELECT * FROM LargePop WHERE Name = 'Nigeria';
+
+UPDATE LargePop SET Population = 99999999
+WHERE Name = 'Nigeria';
+
+INSERT INTO LargePop VALUES('some country',100000000);
+
+INSERT INTO LargePop VALUES('some country2',99999999);
+
+14.3 Altering Views
+
+ALTER VIEW LargePop AS
+SELECT Name, Population FROM CountryPop
+WHERE Population >= 100000000;
+
+14.4 Dropping Views
+
+The following statements make sure that tables/views
+are set up properly for the following DROP VIEW and
+SHOW WARNINGS statements.
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT);
+DROP VIEW IF EXISTS v1, v2;
+CREATE VIEW v1 AS SELECT i FROM t;
+
+DROP VIEW IF EXISTS v1, v2;
+SHOW WARNINGS;
+
+14.5 Checking Views
+
+DROP TABLE IF EXISTS t1, t2;
+DROP VIEW IF EXISTS v;
+
+CREATE TABLE t1 (i INT);
+
+CREATE VIEW v AS SELECT i FROM t1;
+
+RENAME TABLE t1 TO t2;
+
+CHECK TABLE v\G
+
+14.6 Obtaining View Metadata
+
+SELECT * FROM INFORMATION_SCHEMA.VIEWS
+WHERE TABLE_NAME = 'CityView'
+AND TABLE_SCHEMA = 'world'\G
+
+SHOW CREATE VIEW CityView\G
+
+SHOW FULL TABLES FROM world;
+
+14.7 Privileges Required for Views
+
+DROP VIEW IF EXISTS SACountry;
+CREATE VIEW SACountry AS
+SELECT Code, Name FROM Country WHERE Continent = 'South America';
+
+14.8 Exercises
+
+Question 2:
+
+DROP VIEW IF EXISTS v1;
+CREATE VIEW v1 (CityName, CountryName)
+AS SELECT City.Name, Country.Name FROM City, Country
+WHERE City.CountryCode = Country.Code
+AND City.CountryCode = 'DEU';
+
+Answer 2:
+
+DROP VIEW IF EXISTS v1;
+CREATE VIEW v1 (CityName, CountryName)
+AS SELECT City.Name, Country.Name FROM City, Country
+WHERE City.CountryCode = Country.Code
+AND City.CountryCode = 'DEU';
+
+UPDATE v1 SET CityName = 'Werbelina'
+WHERE CityName = 'Berlin';
+
+SELECT Name FROM City
+WHERE Name = 'Werbelina' OR Name = 'Berlin';
+
+UPDATE v1 SET CountryName = 'Deutschland'
+WHERE CountryName = 'Germany';
+
+SELECT Name FROM Country
+WHERE Name = 'Deutschland' OR Name = 'Germany';
+
+UPDATE v1 SET CityName = 'Berlin',
+CountryName = 'Germany'
+WHERE CityName = 'Werbelina'
+AND CountryName = 'Deutschland';
+
+SELECT Name FROM City WHERE Name = 'Neustadt';
+INSERT INTO v1 SET CityName = 'Neustadt',
+CountryName = 'Deutschland';
+
+Answer 3:
+
+DROP VIEW IF EXISTS vSurface;
+CREATE VIEW vSurface
+(Name, ContinentSurface, CountryAvgSurface)
+AS SELECT Continent, SUM(SurfaceArea), AVG(SurfaceArea)
+FROM Country GROUP BY Continent;
+SELECT * FROM vSurface;
+
+Question 4:
+
+DROP VIEW IF EXISTS vSurface;
+CREATE VIEW vSurface
+(Name, ContinentSurface, CountryAvgSurface)
+AS SELECT Continent, SUM(SurfaceArea),
+AVG(SurfaceArea)
+FROM Country GROUP BY Continent;
+
+DROP TABLE IF EXISTS stSurface;
+CREATE TABLE stSurface
+AS SELECT Continent AS Name,
+SUM(SurfaceArea) AS ContinentSurface,
+AVG(SurfaceArea) AS CountryAvgSurface
+FROM Country GROUP BY Continent;
+
+Answer 5:
+
+DROP VIEW IF EXISTS vSurfaceMERGE;
+CREATE ALGORITHM=MERGE VIEW vSurfaceMERGE
+(Name, ContinentSurface, CountryAvgSurface) 
+AS SELECT Continent,
+SUM(SurfaceArea), AVG(SurfaceArea)
+FROM Country GROUP BY Continent;
+
+SHOW WARNINGS\G
+
+SHOW CREATE VIEW vSurfaceMERGE\G
+
+Answer 9:
+
+DROP VIEW IF EXISTS vCountryPopCalc;
+CREATE VIEW vCountryPopCalc
+AS SELECT Name, Population * 1.05 AS PopNew
+FROM Country;
+
+UPDATE vCountryPopCalc SET PopNew = 1000000000
+WHERE Name = 'United States';
+
+UPDATE vCountryPopCalc SET Name = 'Vereinigte Staaten'
+WHERE Name = 'United States';
+
+SELECT Name FROM Country
+WHERE Name = 'United States'
+OR Name = 'Vereinigte Staaten';

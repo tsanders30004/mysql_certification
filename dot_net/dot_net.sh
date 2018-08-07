@@ -1,0 +1,1 @@
+dmcs $1 -r:System.Data.dll -r:/usr/lib/mono/gac/MySql.Data/6.10.7.0__c5687fc88969c44d/MySql.Data.dll

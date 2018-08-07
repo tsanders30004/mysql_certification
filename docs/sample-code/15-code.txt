@@ -1,0 +1,171 @@
+Chapter 15 Importing and Exporting Data
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+15.2.1 Importing Data with LOAD DATA INFILE
+
+In the following example, make these substitutions: 
+- Replace file_name with the name of a file
+- Replace table_name with the name of a table
+
+LOAD DATA INFILE 'file_name' INTO TABLE table_name;
+
+LOAD DATA INFILE 'C:/mydata/data.txt' INTO TABLE t;
+LOAD DATA INFILE 'C:\\mydata\\data.txt' INTO TABLE t;
+
+15.2.1.1 Specifying the Data File Location
+
+LOAD DATA INFILE '/var/mysql/data/test/data.txt' INTO TABLE t;
+
+LOAD DATA INFILE 'data.txt' INTO TABLE t;
+
+LOAD DATA INFILE './test/data.txt' INTO TABLE t;
+
+LOAD DATA LOCAL INFILE '/var/tmp/data.txt' INTO TABLE t;
+LOAD DATA LOCAL INFILE 'data.txt' INTO TABLE t;
+
+LOAD DATA LOCAL INFILE 'tmp/data.txt' INTO TABLE t;
+
+15.2.1.2 Skipping Data File Lines
+
+LOAD DATA INFILE '/tmp/data.txt' INTO TABLE t IGNORE 1 LINES;
+
+15.2.1.3 Loading Specific Table Columns
+
+DROP TABLE IF EXISTS subscriber;
+CREATE TABLE subscriber
+(
+id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+name CHAR(40) NOT NULL,
+address CHAR(40) NOT NULL
+);
+
+DESCRIBE subscriber;
+
+LOAD DATA INFILE '/tmp/people.txt' INTO TABLE subscriber (name,address);
+
+LOAD DATA INFILE '/tmp/people.txt' INTO TABLE subscriber (address,name);
+
+15.2.1.4 Skipping or Transforming Column Values
+
+LOAD DATA INFILE '/tmp/people2.txt' INTO TABLE subscriber
+(@skip,@first,@last,address)
+SET name=CONCAT(@first,' ',@last);
+
+15.2.2 Exporting Data with SELECT ... INTO OUTFILE
+
+SELECT * INTO OUTFILE 'Country.txt' FROM Country;
+
+15.2.3 Data File Format Specifiers
+
+LOAD DATA INFILE '/tmp/data.txt' INTO TABLE t
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\r';
+
+SELECT * INTO OUTFILE '/tmp/data-out.txt'
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\r'
+FROM t;
+
+15.3.1 Importing Data with mysqlimport
+
+mysqlimport --lines-terminated-by="\r\n" world City.txt
+
+mysqlimport --fields-enclosed-by='"' world City.txt
+
+mysqlimport --fields-enclosed-by="\"" world City.txt
+
+mysqlimport --fields-terminated-by=,
+   --lines-terminated-by="\r" world City.txt
+
+15.3.2 Exporting Data with mysqldump
+
+mysqldump --tab=/tmp world City
+
+cd /tmp
+mysql world < City.sql
+mysqlimport world City.txt
+
+15.4 Exercises
+
+Question 1:
+
+DROP TABLE IF EXISTS loadtest;
+CREATE TABLE loadtest (number1 INT, char1 CHAR(1), date1 DATE);
+
+DESCRIBE loadtest;
+
+Answer 1:
+
+SELECT * FROM loadtest;
+
+Question 2:
+
+LOAD DATA LOCAL INFILE
+'C:\Dokumente und Einstellungen\All Users\data for t.txt'
+INTO TABLE t;
+
+Answer 2:
+
+LOAD DATA LOCAL INFILE
+'C:\\Dokumente und Einstellungen\\All Users\\data for t.txt'
+INTO TABLE t;
+
+Question 3:
+
+SHOW CREATE TABLE Country\G
+
+Answer 3:
+
+LOAD DATA LOCAL INFILE 'more_countries.dat'
+INTO TABLE Country (Code, Name);
+
+Answer 10:
+
+mysqlimport landmarks /tmp/buildings.txt
+
+LOAD DATA INFILE '/tmp/buildings.txt' INTO landmarks.buildings;
+
+Question 11:
+
+mysqldump --no-create-info --tab=/tmp
+    --lines-terminated-by="\r\n" project
+
+Question 12:
+
+mysqldump --tab=/backup --fields-terminated-by=,
+    --lines-terminated-by="\r\n" test tbl1 tbl2
+
+Answer 13:
+
+LOAD DATA LOCAL INFILE 'even_more_countries.dat'
+INTO TABLE Country
+IGNORE 1 LINES
+(@unused, Code, Name, @PopCity, @PopRural)
+SET Population = @PopCity + @PopRural;
+
+SELECT Code, Name, Population FROM Country
+WHERE Code = 'UDM' OR Code = 'BAV';
+
+Answer 17:
+
+SELECT pid, unit
+ INTO OUTFILE 'highpers.dat'
+ FIELDS TERMINATED BY ';'
+        ENCLOSED BY '"'
+ LINES TERMINATED BY '\r\n'
+ FROM personnel
+ ORDER BY grade DESC
+ LIMIT 5
+;

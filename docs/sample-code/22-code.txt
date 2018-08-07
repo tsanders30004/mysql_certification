@@ -1,0 +1,180 @@
+Chapter 22 Basic Optimizations
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+22.2.3 Indexing Column Prefixes
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    name CHAR(255),
+    INDEX (name)
+);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    name CHAR(255),
+    INDEX (name(15))
+);
+
+SELECT
+    COUNT(*) AS 'Total Rows',
+    COUNT(DISTINCT name) AS 'Distinct Values',
+    COUNT(*) - COUNT(DISTINCT name) AS 'Duplicate Values'
+FROM t;
+
+In the following example, make this substitution: 
+- Replace n with an integer
+
+SELECT
+    COUNT(DISTINCT LEFT(name,n)) AS 'Distinct Prefix Values',
+    COUNT(*) - COUNT(DISTINCT LEFT(name,n)) AS 'Duplicate Prefix Values'
+FROM t;
+
+22.2.4 Leftmost Index Prefixes
+
+SHOW INDEX FROM CountryLanguage\G
+
+SELECT * FROM CountryLanguage WHERE CountryCode = 'FRA';
+
+22.3.1 Query Rewriting Techniques
+
+SELECT * FROM t WHERE YEAR(d) >= 1994;
+
+SELECT * FROM t WHERE d >= '1994-01-01';
+
+SELECT * FROM Country, CountryLanguage
+WHERE Country.Code = CountryLanguage.CountryCode;
+
+22.3.2 Using EXPLAIN to Obtain Optimizer Information
+
+SELECT * FROM t WHERE YEAR(d) >= 1994;
+SELECT * FROM t WHERE d >= '1994-01-01';
+
+EXPLAIN SELECT * FROM t WHERE YEAR(d) >= 1994\G
+EXPLAIN SELECT * FROM t WHERE d >= '1994-01-01'\G
+
+22.3.3 Optimizing Queries by Limiting Output
+
+SELECT * FROM t LIMIT 10;
+
+SELECT * FROM Country WHERE Name LIKE 'M%';
+
+SELECT Name FROM Country WHERE Name LIKE 'M%';
+
+22.3.4 Using Summary Tables
+
+DROP TABLE IF EXISTS ContinentGNP;
+CREATE TABLE ContinentGNP
+SELECT Continent, AVG(GNP) AS AvgGNP
+FROM Country GROUP BY Continent;
+SELECT * FROM ContinentGNP;
+
+SELECT
+    Country.Continent, Country.Name,
+    Country.GNP AS CountryGNP,
+    ContinentGNP.AvgGNP AS ContinentAvgGNP
+FROM Country, ContinentGNP
+WHERE
+    Country.Continent = ContinentGNP.Continent
+    AND Country.GNP < ContinentGNP.AvgGNP * .01
+ORDER BY Country.Continent, Country.Name;
+
+SELECT
+    Country.Continent, Country.Name,
+    Country.GNP AS CountryGNP,
+    ContinentGNP.AvgGNP AS ContinentAvgGNP
+FROM Country, ContinentGNP
+WHERE
+    Country.Continent = ContinentGNP.Continent
+    AND Country.GNP > ContinentGNP.AvgGNP * 10
+ORDER BY Country.Continent, Country.Name;
+
+22.3.5 Optimizing Updates
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (id INT, name CHAR(10));
+INSERT INTO t (id, name) VALUES(1,'Bea');
+INSERT INTO t (id, name) VALUES(2,'Belle');
+INSERT INTO t (id, name) VALUES(3,'Bernice');
+
+INSERT INTO t (id, name) VALUES(1,'Bea'),(2,'Belle'),(3,'Bernice');
+
+START TRANSACTION;
+INSERT INTO t (id, name) VALUES(1,'Bea');
+INSERT INTO t (id, name) VALUES(2,'Belle');
+INSERT INTO t (id, name) VALUES(3,'Bernice');
+COMMIT;
+
+22.6 Exercises
+
+Question 1:
+
+DROP TABLE IF EXISTS fastindex;
+CREATE TABLE fastindex (i1 CHAR(10) NOT NULL, i2 CHAR(10),
+INDEX (i1), INDEX (i2));
+DESCRIBE fastindex;
+
+SELECT i1 FROM fastindex WHERE i1 LIKE 'mid%';
+
+SELECT i2 FROM fastindex WHERE i2 LIKE 'mid%';
+
+Answer 1:
+
+SELECT i1 FROM fastindex WHERE i1 LIKE 'mid%';
+
+Question 2:
+
+DROP TABLE IF EXISTS fastindex;
+CREATE TABLE fastindex (i1 CHAR(10) NOT NULL DEFAULT '',
+i2 CHAR(10) NOT NULL DEFAULT '',
+INDEX (i1(3)), INDEX (i2));
+SHOW CREATE TABLE fastindex\G
+
+SELECT i1 FROM fastindex WHERE i1 LIKE 'mid%';
+
+SELECT i2 FROM fastindex WHERE i2 LIKE 'mid%';
+
+Answer 2:
+
+SELECT i1 FROM fastindex WHERE i1 LIKE 'mid%';
+
+Question 7:
+
+DESCRIBE Country\G
+
+Answer 10:
+
+CREATE INDEX Name ON City(Name(5));
+ALTER TABLE City ADD INDEX(Name(5));
+
+Question 13:
+
+DROP TABLE IF EXISTS enumtest;
+CREATE TABLE enumtest (col enum('first','second','third')
+NOT NULL PRIMARY KEY DEFAULT 'first');
+
+DESCRIBE enumtest;
+SELECT * FROM enumtest;
+
+INSERT INTO enumtest VALUES
+('first'),('second'),('third'),('false'),('fourth');
+
+Answer 13:
+
+INSERT INTO enumtest VALUES
+('first'),('second'),('third'),('false'),('fourth');
+
+SELECT * FROM enumtest;

@@ -1,0 +1,563 @@
+Chapter 8 Tables and Indexes
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+8.2.1 Creating Tables Using an Explicit Definition
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (id INT);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (id INT NOT NULL);
+
+CREATE TABLE IF NOT EXISTS t (i INT);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    id         INT NOT NULL,
+    last_name  CHAR(30) NOT NULL,
+    first_name CHAR(30) NOT NULL,
+    d          DATE NOT NULL
+);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    id         INT NOT NULL,
+    last_name  CHAR(30) NOT NULL,
+    first_name CHAR(30) NOT NULL,
+    UNIQUE (id),
+    INDEX (last_name, first_name)
+);
+
+8.2.2 Specifying the Storage Engine for a Table
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT) ENGINE = InnoDB;
+
+ALTER TABLE t ENGINE = MyISAM;
+
+DROP TABLE IF EXISTS t;
+SET storage_engine = InnoDB;
+CREATE TABLE t (i INT) ENGINE = ISAM;
+SHOW WARNINGS\G
+
+8.2.3 Creating Tables Based on Existing Tables
+
+CREATE TABLE CityCopy1 SELECT * FROM City;
+CREATE TABLE CityCopy2 SELECT * FROM City WHERE Population > 2000000;
+CREATE TABLE CityCopy3 SELECT * FROM City WHERE 0;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(i INT NOT NULL AUTO_INCREMENT,
+PRIMARY KEY (i))
+ENGINE = InnoDB;
+
+DROP TABLE IF EXISTS copy1, copy2;
+CREATE TABLE copy1 SELECT * FROM t WHERE 0;
+CREATE TABLE copy2 LIKE t;
+
+SHOW CREATE TABLE copy1\G;
+SHOW CREATE TABLE copy2\G;
+
+8.3 Altering Tables
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE HeadOfState
+(
+    ID          INT NOT NULL,
+    LastName    CHAR(30) NOT NULL,
+    FirstName   CHAR(30) NOT NULL
+);
+
+DESCRIBE HeadOfState;
+
+8.3.1 Adding and Dropping Columns
+
+ALTER TABLE HeadOfState ADD Inauguration DATE NOT NULL;
+DESCRIBE HeadOfState;
+
+ALTER TABLE HeadOfState DROP Inauguration;
+ALTER TABLE HeadOfState ADD Inauguration DATE NOT NULL FIRST;
+DESCRIBE HeadOfState;
+
+ALTER TABLE HeadOfState DROP Inauguration;
+ALTER TABLE HeadOfState ADD Inauguration DATE NOT NULL AFTER FirstName;
+DESCRIBE HeadOfState;
+
+8.3.2 Modifying Existing Columns
+
+ALTER TABLE HeadOfState MODIFY ID BIGINT UNSIGNED NOT NULL;
+DESCRIBE HeadOfState;
+
+ALTER TABLE HeadOfState CHANGE LastName LastName CHAR(40) NOT NULL;
+
+ALTER TABLE HeadOfState CHANGE LastName Surname CHAR(40) NOT NULL;
+
+8.3.3 Renaming a Table
+
+ALTER TABLE t1 RENAME TO t2;
+
+RENAME TABLE t1 TO t2;
+
+RENAME TABLE t1 TO tmp, t2 TO t1, tmp TO t2;
+
+8.3.4 Specifying Multiple Table Alterations
+
+ALTER TABLE HeadOfState RENAME TO CountryLeader,
+    MODIFY ID BIGINT UNSIGNED NOT NULL,
+    ADD Salutation CHAR(30) NULL AFTER FirstName;
+
+8.4 Dropping Tables
+
+DROP TABLE t;
+
+DROP TABLE t1, t2, t3;
+
+DROP TABLE no_such_table;
+
+DROP TABLE IF EXISTS no_such_table;
+
+SHOW WARNINGS;
+
+8.5 Emptying Tables
+
+DELETE FROM t;
+TRUNCATE TABLE t;
+
+DELETE FROM t WHERE status = 'expired';
+
+8.6.2.1 Defining Indexes at Table Creation Time
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE HeadOfState
+(
+    ID           INT NOT NULL,
+    LastName     CHAR(30) NOT NULL,
+    FirstName    CHAR(30) NOT NULL,
+    CountryCode  CHAR(3) NOT NULL,
+    Inauguration DATE NOT NULL
+);
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE HeadOfState
+(
+    ID           INT NOT NULL,
+    LastName     CHAR(30) NOT NULL,
+    FirstName    CHAR(30) NOT NULL,
+    CountryCode  CHAR(3) NOT NULL,
+    Inauguration DATE NOT NULL,
+    INDEX (Inauguration)
+);
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE HeadOfState
+(
+    ID           INT NOT NULL,
+    LastName     CHAR(30) NOT NULL,
+    FirstName    CHAR(30) NOT NULL,
+    CountryCode  CHAR(3) NOT NULL,
+    Inauguration DATE NOT NULL,
+    INDEX (LastName, FirstName)
+);
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE HeadOfState
+(
+    ID           INT NOT NULL,
+    LastName     CHAR(30) NOT NULL,
+    FirstName    CHAR(30) NOT NULL,
+    CountryCode  CHAR(3) NOT NULL,
+    Inauguration DATE NOT NULL,
+    INDEX (LastName, FirstName),
+    INDEX (Inauguration)
+);
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE HeadOfState
+(
+    ID           INT NOT NULL,
+    LastName     CHAR(30) NOT NULL,
+    FirstName    CHAR(30) NOT NULL,
+    CountryCode  CHAR(3) NOT NULL,
+    Inauguration DATE NOT NULL,
+    UNIQUE (ID)
+);
+
+8.6.2.2 Creating and Using Primary Keys
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    id   INT NOT NULL,
+    name CHAR(30) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    id   INT NOT NULL,
+    name CHAR(30) NOT NULL,
+    UNIQUE (id)
+);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    id   INT NOT NULL PRIMARY KEY,
+    name CHAR(30) NOT NULL
+);
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t
+(
+    id   INT NOT NULL UNIQUE,
+    name CHAR(30) NOT NULL
+);
+
+DROP TABLE IF EXISTS people;
+CREATE TABLE people
+(
+    last_name  CHAR(30) NOT NULL,
+    first_name CHAR(30) NOT NULL,
+    PRIMARY KEY (last_name, first_name)
+);
+
+DROP TABLE IF EXISTS people;
+CREATE TABLE people
+(
+    last_name  CHAR(30) NOT NULL,
+    first_name CHAR(30) NOT NULL,
+    UNIQUE (last_name, first_name)
+);
+
+8.6.2.3 Naming Indexes
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE HeadOfState
+(
+    ID           INT NOT NULL,
+    LastName     CHAR(30) NOT NULL,
+    FirstName    CHAR(30) NOT NULL,
+    CountryCode  CHAR(3) NOT NULL,
+    Inauguration DATE NOT NULL,
+    INDEX NameIndex (LastName, FirstName),
+    UNIQUE IDIndex (ID)
+);
+
+8.6.2.4 Adding Indexes to Existing Tables
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE HeadOfState
+(
+    ID           INT NOT NULL,
+    LastName     CHAR(30) NOT NULL,
+    FirstName    CHAR(30) NOT NULL,
+    CountryCode  CHAR(3) NOT NULL,
+    Inauguration DATE NOT NULL
+);
+
+ALTER TABLE HeadOfState ADD PRIMARY KEY (ID);
+ALTER TABLE HeadOfState ADD INDEX (LastName,FirstName);
+(or)
+ALTER TABLE HeadOfState ADD PRIMARY KEY (ID), ADD INDEX (LastName,FirstName);
+
+
+CREATE UNIQUE INDEX IDIndex ON HeadOfState (ID);
+CREATE INDEX NameIndex ON HeadOfState (LastName,FirstName);
+
+8.6.3 Choosing an Indexing Algorithm
+
+DROP TABLE IF EXISTS lookup;
+CREATE TABLE lookup
+(
+    id INT,
+    INDEX USING HASH (id)
+) ENGINE = MEMORY;
+
+DROP TABLE IF EXISTS lookup;
+CREATE TABLE lookup
+(
+    id INT,
+    INDEX (id)
+) ENGINE = MEMORY;
+
+DROP TABLE IF EXISTS lookup;
+CREATE TABLE lookup (
+  id INT, 
+  INDEX USING BTREE (id)
+) ENGINE = MEMORY;
+
+DROP TABLE IF EXISTS lookup;
+CREATE TABLE lookup (id INT) ENGINE = MEMORY;  
+ALTER TABLE lookup ADD INDEX USING BTREE (id);
+
+DROP TABLE IF EXISTS lookup;
+CREATE TABLE lookup (id INT) ENGINE = MEMORY;  
+CREATE INDEX id_idx USING BTREE ON lookup (id);
+
+8.7 Dropping Indexes
+
+ALTER TABLE HeadOfState DROP PRIMARY KEY;
+
+DROP TABLE IF EXISTS HeadOfState;
+CREATE TABLE `HeadOfState` (
+`ID` int(11) NOT NULL default '0',
+`LastName` char(30) NOT NULL default '',
+`FirstName` char(30) NOT NULL default '',
+`CountryCode` char(3) NOT NULL default '',
+`Inauguration` date NOT NULL default '0000-00-00',
+KEY `NameIndex` (`LastName`,`FirstName`)
+) ENGINE=MyISAM;
+
+SHOW CREATE TABLE HeadOfState\G
+
+ALTER TABLE HeadOfState DROP INDEX NameIndex;
+
+ALTER TABLE HeadOfState ADD INDEX NameIndex (LastName, FirstName);
+
+DROP INDEX NameIndex ON t;
+
+DROP INDEX `PRIMARY` ON t;
+
+8.8 Obtaining Table and Index Metadata
+
+SELECT * FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world'
+AND TABLE_NAME = 'City'\G
+
+SHOW TABLES FROM world;
+
+SHOW TABLES;
+
+SHOW TABLES FROM world LIKE '%tr%';
+
+SHOW CREATE TABLE CountryLanguage\G
+
+DESCRIBE CountryLanguage;
+
+DESCRIBE CountryLanguage;
+SHOW COLUMNS FROM CountryLanguage;
+SHOW FIELDS FROM CountryLanguage;
+
+SHOW INDEX FROM Country\G
+
+SHOW INDEX FROM CountryLanguage\G
+
+8.9 Exercises
+
+Question 3:
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT NOT NULL PRIMARY KEY);
+DESCRIBE t;
+
+Answer 3:
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT NOT NULL PRIMARY KEY);
+DROP INDEX `PRIMARY` ON t;
+DESCRIBE t;
+
+DROP TABLE IF EXISTS t;
+CREATE TABLE t (i INT NOT NULL PRIMARY KEY);
+ALTER TABLE t DROP PRIMARY KEY;
+DESCRIBE t;
+
+Question 11:
+
+DROP TABLE IF EXISTS cats;
+CREATE TABLE cats (
+    id   INT       UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY
+    name CHAR(10)
+);
+
+Answer 12:
+
+DROP TABLE IF EXISTS test.City;
+CREATE TABLE test.City SELECT * FROM world.City;
+
+DESCRIBE test.City;
+
+DROP TABLE IF EXISTS test.City;
+CREATE TABLE test.City LIKE world.City;
+INSERT INTO test.City SELECT * FROM world.City;
+
+DESCRIBE test.City;
+
+Answer 17:
+
+ALTER TABLE tbl RENAME TO tbl_new;
+RENAME TABLE tbl TO tbl_new;
+
+Question 19:
+
+CREATE TABLE mytable (
+    col1 CHAR(5) NOT NULL,
+    col2 CHAR(5) NULL,
+    PRIMARY KEY (col1,col2)
+);
+
+Question 20:
+
+DESCRIBE mytable;
+
+Answer 20:
+
+ALTER TABLE mytable
+ ADD col0 INT FIRST,
+ ADD col2 INT AFTER col1,
+ ADD col4 INT
+;
+
+Question 22:
+
+CREATE TABLE tbl (col1 INT NOT NULL PRIMARY KEY);
+
+Answer 22:
+
+CREATE TABLE tbl (
+ col1 INT NOT NULL,
+ col2 INT NOT NULL,
+ PRIMARY KEY (col1, col2)
+);
+
+Answer 23:
+
+TRUNCATE TABLE City;
+SELECT COUNT(*) FROM City;
+
+DELETE FROM City;
+
+Answer 24:
+
+SHOW TABLES FROM test LIKE '%test%';
+SHOW TABLE STATUS FROM test LIKE '%test%';
+
+SELECT * FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'test' AND TABLE_NAME LIKE '%test%';
+
+Answer 25:
+
+SHOW COLUMNS FROM mytest FROM test LIKE 'id%';
+
+Answer 26:
+
+SHOW CREATE TABLE test.mytest;
+
+Question 27:
+
+SET storage_engine = InnoDB;
+DROP TABLE IF EXISTS defaulttype;
+CREATE TABLE defaulttype (id INT);
+SHOW TABLE STATUS LIKE 'defaulttype';
+
+Answer 27:
+
+SET storage_engine = InnoDB;
+
+CREATE TABLE defaulttype (id INT) ENGINE=MyISAM;
+
+SET storage_engine = MyISAM;
+CREATE TABLE defaulttype (id INT)
+
+Answer 28:
+
+SET GLOBAL storage_engine=InnoDB;
+
+Question 34:
+
+DESCRIBE mytbl;
+
+Answer 34:
+
+DROP TABLE IF EXISTS mytbl;
+CREATE TABLE mytbl (
+ col1 INT UNSIGNED NOT NULL,
+ col2 CHAR(50) NOT NULL,
+ col3 CHAR(50) NOT NULL,
+ PRIMARY KEY(col1),
+ UNIQUE(col2),
+ INDEX(col3)
+);
+
+Question 38:
+
+DROP TABLE IF EXISTS mytable;
+CREATE TABLE mytable (col CHAR(10) NULL UNIQUE);
+DESCRIBE mytable;
+
+INSERT INTO mytable VALUES (NULL),(NULL),('data'),('test'),(NULL);
+
+Question 39:
+
+DROP TABLE IF EXISTS mytable;
+CREATE TABLE mytable (col1 CHAR(10) NOT NULL, col2 CHAR(10) NOT NULL);
+INSERT INTO mytable VALUES
+('yoo','doo'),('doo','yoo'),('doo','doo'),('yoo','yoo');
+
+SELECT * FROM mytable;
+
+Answer 39:
+
+ALTER TABLE mytable ADD PRIMARY KEY (col1, col2);
+
+Question 42:
+
+DROP TABLE IF EXISTS t_active, t_archive, t_template;
+CREATE TABLE t_active (i INT);
+CREATE TABLE t_archive (i INT);
+CREATE TABLE t_template (i INT);
+SHOW TABLES LIKE 't\_%';
+
+Answer 42:
+
+RENAME TABLE t_archive TO t_archive_lastyear,
+t_active TO t_archive, t_template TO t_active;
+
+SHOW TABLES LIKE 't\_%';
+
+Question 43:
+
+DROP TEMPORARY TABLE IF EXISTS t1;
+CREATE TEMPORARY TABLE t1 (i INT);
+
+Answer 43:
+
+RENAME TABLE t1 TO t2;
+ALTER TABLE t1 RENAME TO t2;
+
+Answer 44:
+
+SHOW TABLES FROM test;
+SHOW TABLE STATUS FROM test;
+
+Answer 45:
+
+SHOW COLUMNS FROM mytest FROM test;
+SHOW COLUMNS FROM test.mytest;
+
+Question 46:
+
+SET storage_engine = MyISAM;
+DROP TABLE IF EXISTS innodbtable;
+CREATE TABLE innodbtable (id INT) ENGINE=InnoDB;
+SHOW TABLE STATUS LIKE 'innodbtable';
+
+Answer 48:
+
+SET SESSION storage_engine=InnoDB;

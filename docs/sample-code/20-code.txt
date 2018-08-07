@@ -1,0 +1,130 @@
+Chapter 20 Obtaining Database Metadata
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+20.1 Overview of Metadata Access Methods
+
+20.2 Using INFORMATION_SCHEMA to Obtain Metadata
+
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'INFORMATION_SCHEMA'
+ORDER BY TABLE_NAME;
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'INFORMATION_SCHEMA'
+AND TABLE_NAME = 'VIEWS';
+
+SELECT column_name FROM information_schema.columns
+WHERE table_schema = 'information_schema'
+AND table_name = 'views';
+
+SELECT TABLE_NAME, ENGINE FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world';
+
+SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE DATA_TYPE = 'set';
+
+SELECT CHARACTER_SET_NAME, COLLATION_NAME     
+FROM INFORMATION_SCHEMA.COLLATIONS
+WHERE IS_DEFAULT = 'Yes';
+
+SELECT TABLE_SCHEMA, COUNT(*)
+FROM INFORMATION_SCHEMA.TABLES;
+GROUP BY TABLE_SCHEMA;
+
+DELETE FROM INFORMATION_SCHEMA.VIEWS;
+
+20.3 Using SHOW and DESCRIBE to Obtain Metadata
+
+SHOW DATABASES;
+
+SHOW TABLES;
+SHOW TABLES FROM mysql;
+
+SHOW COLUMNS FROM CountryLanguage;
+
+SHOW FULL COLUMNS FROM CountryLanguage\G
+
+SHOW KEYS FROM City\G
+
+SHOW DATABASES LIKE 'm%';
+
+SHOW COLUMNS FROM Country WHERE `Default` IS NULL;
+
+SHOW CHARACTER SET;
+
+SHOW COLLATION;
+
+SHOW DATABASES;
+SHOW TABLES FROM INFORMATION_SCHEMA;
+
+DESCRIBE INFORMATION_SCHEMA.CHARACTER_SETS;
+
+20.4 Using mysqlshow to Obtain Metadata
+
+mysqlshow
+
+mysqlshow world
+
+mysqlshow world City
+mysqlshow world City CountryCode
+
+mysqlshow "w%"
+
+20.5 Exercises
+
+Answer 4:
+
+SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA
+WHERE SCHEMA_NAME LIKE 'w%';
+
+Answer 5:
+
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world';
+
+Answer 6:
+
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'world' AND TABLE_NAME LIKE 'C%';
+
+Answer 7:
+
+SHOW COLUMNS FROM City FROM world\G
+
+SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE,
+COLUMN_KEY, COLUMN_DEFAULT, EXTRA
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = 'world' AND TABLE_NAME = 'City'\G
+
+Answer 8:
+
+SHOW KEYS FROM City FROM world\G
+
+SELECT * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE TABLE_SCHEMA = 'world' AND TABLE_NAME = 'City'\G
+
+Answer 9:
+
+SELECT * FROM INFORMATION_SCHEMA.CHARACTER_SETS;
+
+Answer 10:
+
+SELECT * FROM INFORMATION_SCHEMA.COLLATION_CHARACTER_SET_APPLICABILITY;
+
+Answer 11:
+
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'INFORMATION_SCHEMA';

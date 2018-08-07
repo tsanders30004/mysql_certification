@@ -1,0 +1,77 @@
+Chapter 1 Client/Server Concepts
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+1.2 Invoking Client Programs
+
+mysql --help
+
+mysql --version
+
+1.2.1 General Command Option Syntax
+
+mysql --version
+mysql -V
+
+1.2.2 Connection Parameter Options
+
+mysql -p
+
+mysql
+
+mysql --protocol=memory
+
+mysql --host=localhost --password --user=myname
+
+mysql -h localhost -p -u myname
+
+mysql --host=192.168.1.33 --user=myname --password=mypass
+
+mysql --host=localhost --compress
+
+1.2.4 Selecting a Default Database
+
+In the following example, make this substitution: 
+- Replace user_name with a username
+
+mysqldump --password --user=user_name world > world.sql
+
+SELECT * FROM world.Country;
+
+USE world;
+
+SELECT * FROM world.Country;
+SELECT * FROM Country;
+
+1.3 Server SQL Modes
+
+SET sql_mode = '';
+
+SET sql_mode = ANSI_QUOTES;
+SET sql_mode = 'TRADITIONAL';
+
+SET sql_mode = 'IGNORE_SPACE,ANSI_QUOTES';
+SET sql_mode = 'STRICT_ALL_TABLES,ERROR_FOR_DIVISION_BY_ZERO';
+
+SELECT @@sql_mode;
+
+SET sql_mode='TRADITIONAL';
+
+SELECT @@sql_mode\G
+
+1.4 Exercises
+
+Answer 12:
+
+SET sql_mode = 'STRICT_ALL_TABLES,ERROR_FOR_DIVISION_BY_ZERO';

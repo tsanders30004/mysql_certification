@@ -1,0 +1,58 @@
+Chapter 42 Scaling MySQL
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+42.2.1 Setting Up Replication
+
+In the following example, make these substitutions: 
+- Replace slave_user with the slave username
+- Replace slave_host with the slave hostname
+- Replace slave_pass with the slave password
+
+CREATE USER 'slave_user'@'slave_host' IDENTIFIED BY 'slave_pass';
+GRANT REPLICATION SLAVE ON *.* TO 'slave_user'@'slave_host';
+
+In the following example, make these substitutions: 
+- Replace master_host_name with the master hostname
+- Replace slave_user with the slave username
+- Replace slave_pass with the slave password
+- Replace master_log_file with the master log filename
+- Replace master_log_pos with the master log file position
+
+CHANGE MASTER TO
+MASTER_HOST = 'master_host_name',
+MASTER_USER = 'slave_user',
+MASTER_PASSWORD = 'slave_pass',
+MASTER_LOG_FILE = 'master_log_file',
+MASTER_LOG_POS = master_log_pos;
+
+42.2.3 Replication-Related Threads
+
+SHOW PROCESSLIST\G
+
+42.3 Exercises
+
+Answer 9:
+
+SHOW MASTER STATUS;
+
+SHOW SLAVE STATUS\G
+
+Answer 12:
+
+In the following example, make these substitutions: 
+- Replace file_name with the master log filename
+- Replace file_position with the master log file position
+
+CHANGE MASTER TO MASTER_LOG_FILE='file_name', MASTER_LOG_POS=file_position;

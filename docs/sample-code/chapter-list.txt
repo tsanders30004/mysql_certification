@@ -1,0 +1,42 @@
+Chapter 1 Client/Server Concepts
+Chapter 2 The mysql Client Program
+Chapter 3 MySQL Query Browser
+Chapter 4 MySQL Connectors
+Chapter 5 Data Types
+Chapter 6 Identifiers
+Chapter 7 Databases
+Chapter 8 Tables and Indexes
+Chapter 9 Querying for Data
+Chapter 10 SQL Expressions
+Chapter 11 Updating Data
+Chapter 12 Joins
+Chapter 13 Subqueries
+Chapter 14 Views
+Chapter 15 Importing and Exporting Data
+Chapter 16 User Variables
+Chapter 17 Prepared Statements
+Chapter 18 Stored Procedures and Functions
+Chapter 19 Triggers
+Chapter 20 Obtaining Database Metadata
+Chapter 21 Debugging MySQL Applications
+Chapter 22 Basic Optimizations
+Chapter 23 MySQL Architecture
+Chapter 24 Starting, Stopping, and Configuring MySQL
+Chapter 25 Client Programs for DBA Work
+Chapter 26 MySQL Administrator
+Chapter 27 Character Set Support
+Chapter 28 Locking
+Chapter 29 Storage Engines
+Chapter 30 Table Maintenance
+Chapter 31 The INFORMATION_SCHEMA Database
+Chapter 32 Data Backup and Recovery Methods
+Chapter 33 Using Stored Routines and Triggers for Administration
+Chapter 34 User Management
+Chapter 35 Securing the MySQL Installation
+Chapter 36 Upgrade-Related Security Issues
+Chapter 37 Optimizing Queries
+Chapter 38 Optimizing Databases
+Chapter 39 Optimizing the Server
+Chapter 40 Interpreting Diagnostic Messages
+Chapter 41 Optimizing the Environment
+Chapter 42 Scaling MySQL

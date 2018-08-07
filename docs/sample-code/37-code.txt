@@ -1,0 +1,191 @@
+Chapter 37 Optimizing Queries
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+37.2.1 How EXPLAIN Works
+
+SELECT 1;
+
+EXPLAIN SELECT 1;
+
+SELECT * FROM Country WHERE Name = 'France';
+SELECT * FROM Country WHERE Code = 'FRA';
+
+EXPLAIN SELECT * FROM Country WHERE Name = 'France'\G
+EXPLAIN SELECT * FROM Country WHERE Code = 'FRA'\G
+
+37.2.2 Analyzing a Query
+
+DROP TABLE IF EXISTS CountryList;
+DROP TABLE IF EXISTS CityList;
+
+CREATE TABLE CountryList ENGINE = MyISAM
+SELECT Code, Name FROM Country;
+
+CREATE TABLE CityList ENGINE = MyISAM
+SELECT CountryCode, Name, Population FROM City;
+
+SELECT CountryList.Name, CityList.Name, CityList.Population
+FROM CountryList, CityList
+WHERE CountryList.Code = CityList.CountryCode
+AND CityList.Population > 8000000;
+
+EXPLAIN SELECT CountryList.Name, CityList.Name, CityList.Population
+FROM CountryList, CityList
+WHERE CountryList.Code = CityList.CountryCode
+AND CityList.Population > 8000000\G
+
+ALTER TABLE CountryList ADD PRIMARY KEY (Code);
+
+ALTER TABLE CityList ADD INDEX (CountryCode);
+
+EXPLAIN SELECT CountryList.Name, CityList.Name, CityList.Population
+FROM CountryList, CityList
+WHERE CountryList.Code = CityList.CountryCode
+AND CityList.Population > 8000000\G
+
+ALTER TABLE CityList ADD INDEX (Population);
+
+EXPLAIN SELECT CountryList.Name, CityList.Name, CityList.Population
+FROM CountryList, CityList
+WHERE CountryList.Code = CityList.CountryCode
+AND CityList.Population > 8000000\G
+
+37.2.3 EXPLAIN Output Columns
+
+EXPLAIN SELECT * FROM Country WHERE Code = 'FRA'\G
+
+SELECT Name FROM CountryList USE INDEX(PRIMARY) WHERE Code > 'M';
+
+SELECT Name FROM CountryList IGNORE INDEX(Population)
+WHERE Code < 'B' AND Population > 50000000;
+
+37.4 MyISAM Index Caching
+
+SET GLOBAL city_cache.key_buffer_size = 4194304;
+
+CACHE INDEX world.City IN city_cache;
+
+LOAD INDEX INTO CACHE world.City;
+
+SET GLOBAL city_cache.key_buffer_size = 4194304;
+CACHE INDEX world.City IN city_cache;
+LOAD INDEX INTO CACHE world.City;
+
+37.5 Exercises
+
+Question 4:
+
+SELECT * FROM City WHERE Name BETWEEN 'E' AND 'G'
+ORDER BY Name;
+
+SELECT * FROM City WHERE CountryCode >= 'Y'
+ORDER BY name;
+
+Answer 4:
+
+EXPLAIN SELECT * FROM City WHERE Name BETWEEN 'E' AND 'G'
+ORDER BY Name\G
+EXPLAIN SELECT * FROM City WHERE CountryCode >= 'Y'
+ORDER BY Name\G
+
+Question 5:
+
+EXPLAIN
+SELECT
+ City.Name, City.Population, Country.Name
+ FROM City INNER JOIN Country
+ ON City.CountryCode = Country.Code
+ WHERE City.Population > 10000000
+ ORDER BY City.Population DESC
+\G
+
+Answer 6:
+
+ALTER TABLE City
+ ADD INDEX (Population)
+;
+
+EXPLAIN
+SELECT
+ City.Name, City.Population, Country.Name
+ FROM City INNER JOIN Country
+ ON City.CountryCode = Country.Code
+ WHERE City.Population > 10000000
+ ORDER BY City.Population DESC
+\G
+
+Answer 9:
+
+EXPLAIN SELECT Name FROM City;
+
+Answer 10:
+
+SELECT Name FROM City IGNORE INDEX (idx_name);
+
+Answer 11:
+
+SELECT Name FROM City FORCE INDEX (idx_name);
+
+Answer 13:
+
+SET GLOBAL world_cache.key_buffer_size = 4 * 1024 * 1024;
+
+CACHE INDEX City, Country, CountryLanguage IN world_cache;
+
+LOAD INDEX INTO CACHE City, Country, CountryLanguage;
+
+
+mysqld --init-file=init_cache.sql
+
+Question 14:
+
+SELECT * FROM City WHERE Name BETWEEN 'E' AND 'G'
+ORDER BY Name;
+
+SELECT * FROM City WHERE CountryCode >= 'Y'
+ORDER BY name;
+
+Answer 14:
+
+ALTER TABLE City
+ ADD INDEX (Name(10)),
+ ADD INDEX (CountryCode)
+;
+
+Question 15:
+
+SELECT * FROM City WHERE Name BETWEEN 'E' AND 'G'
+ORDER BY Name;
+
+SELECT * FROM City WHERE CountryCode >= 'Y'
+ORDER BY name;
+
+DESCRIBE City;
+
+Answer 15:
+
+ALTER TABLE City
+ MODIFY Name CHAR(35) NOT NULL,
+ MODIFY CountryCode CHAR(3) NOT NULL
+;
+
+DESCRIBE City;
+
+Answer 16:
+
+EXPLAIN SELECT * FROM City WHERE Name BETWEEN 'E' AND 'G'
+ORDER BY Name\G
+EXPLAIN SELECT * FROM City WHERE CountryCode >= 'Y'
+ORDER BY Name\G

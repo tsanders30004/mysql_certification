@@ -1,0 +1,143 @@
+Chapter 24 Starting, Stopping, and Configuring MySQL
+
+Unless you see a USE statement for a different database,
+assume for SQL statements that the world database has
+been selected as the default database.
+
+Some examples are preceded by additional statements
+that do not appear in the printed study guide.  For
+example, a CREATE TABLE statement may be preceded by a
+DROP TABLE IF EXISTS statement to make sure that the
+table created by the CREATE TABLE statement does not
+already exist, or a SELECT statement that displays
+sample data may be preceded by statements that create
+and populate the table.
+
+24.2.1 Server Startup Prerequisites on Windows
+
+[mysqld]
+basedir="C:/Program Files/MySQL/MySQL Server 5.0"
+
+mysqld --install MySQL
+    --defaults-file="C:\Program Files\MySQL\MySQL Server 5.0\my.ini"
+
+
+24.2.2 Running MySQL Server Manually on Windows
+
+mysqld
+
+mysqld --console
+
+mysqladmin shutdown
+
+24.2.3 Running MySQL Server as a Windows Service
+
+mysqld --install
+
+mysqld --install MySQL --defaults-file=C:\server-opts
+
+net start MySQL
+net stop MySQL
+
+mysqld --remove
+
+In the following example, make this substitution: 
+- Replace my_service with a service name
+
+mysqld --install my_service
+mysqld --install my_service --defaults-file=C:\server-opts
+mysqld --remove my_service
+net start my_service
+net stop my_service
+
+24.3.1 Server Startup Prerequisites on Unix
+
+cd /usr/local/mysql
+scripts/mysql_install_db
+
+cd /usr/local/mysql
+scripts/mysql_install_db --user=mysql
+
+24.3.2 Choosing a Server Startup Method on Unix
+
+/etc/init.d/mysql start
+/etc/init.d/mysql stop
+
+24.4 Runtime MySQL Configuration
+
+mysqld --verbose --help
+
+[mysqld]
+basedir=E:/mysql
+
+[mysqld]
+basedir=E:/mysql
+datadir=D:/mysql-data
+
+basedir=E:/mysql
+basedir=E:\\mysql
+
+basedir="C:/Program Files/MySQL/MySQL Server 5.0"
+
+[mysqld]
+shared-memory
+
+[mysqld]
+enable-named-pipe
+
+[mysqld]
+log
+log-bin
+log-slow-queries
+
+[mysqld]
+default-storage-engine=InnoDB
+
+[mysqld]
+max_connections=200
+key_buffer_size=128M
+
+24.6 Loading Time Zone Tables
+
+mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
+
+24.8 Setting the Default SQL Mode
+
+[mysqld]
+sql-mode=TRADITIONAL
+
+24.10 Exercises
+
+Answer 5:
+
+mysqld --user=mysql
+
+[mysqld]
+user=mysql
+
+Answer 9:
+
+mysqld --console
+
+Answer 10:
+
+mysqld
+
+Answer 11:
+
+mysqld
+--defaults-file="C:\Programme\MySQL\MySQL Server 5.0\my_config.ini"
+
+mysqld --install MySQL
+--defaults-file="C:\Programme\MySQL\MySQL Server 5.0\my_config.ini"
+
+Answer 12:
+
+mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
+
+Answer 16:
+
+mysqld --basedir="C:\Programme\MySQL\MySQL Server 5.0"
+
+[mysqld]
+basedir="C:/Programme/MySQL/MySQL Server 5.0"
