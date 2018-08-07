@@ -8,7 +8,7 @@ public class Example1
      public static void Main(string[] args)
      {
 
-          string my_connection_str = "server=localhost;user=mint;database=aircraft;port=3306;password=rambuteau";
+          string my_connection_str = "server=localhost;user=mint;database=aircraft;port=3306;password=mint";
           MySqlConnection my_connection = new MySqlConnection(my_connection_str);
 
           /* select example via ExecuteNonQuery() */
@@ -16,7 +16,7 @@ public class Example1
           {
                Console.WriteLine("inserting row via ExecuteNonQuery");
                my_connection.Open();
-               string my_sql_insert = "insert into aircraft values(NULL, 'Boeing', @new_model, NULL)";
+               string my_sql_insert = "insert into planes values(NULL, 'Boeing', @new_model, NULL)";
 
                MySqlCommand my_command_insert = new MySqlCommand(my_sql_insert, my_connection);
 
@@ -40,7 +40,7 @@ public class Example1
           {
                Console.WriteLine("deleting row via ExecuteNonQuery");
                my_connection.Open();
-               string my_sql_delete = "delete from aircraft where id=29";
+               string my_sql_delete = "delete from planes where id=29";
                MySqlCommand my_command_delete = new MySqlCommand(my_sql_delete, my_connection);
                my_command_delete.ExecuteNonQuery();
                my_connection.Close();
@@ -56,7 +56,7 @@ public class Example1
           {
                Console.WriteLine("show result set via ExecuteReader");
                my_connection.Open();
-               string my_sql_select = "select manf, model, ts from aircraft order by model";
+               string my_sql_select = "select manf, model, ts from planes order by model";
                MySqlCommand my_command_select = new MySqlCommand(my_sql_select, my_connection);
                MySqlDataReader my_result_set = my_command_select.ExecuteReader();
                while(my_result_set.Read())
@@ -75,7 +75,7 @@ public class Example1
           {
                Console.WriteLine("retrieving number of rows via ExecuteScalar");
                my_connection.Open();
-               string my_sql_scalar = "select count(*) from aircraft";
+               string my_sql_scalar = "select count(*) from planes";
                MySqlCommand my_command_scalar = new MySqlCommand(my_sql_scalar, my_connection);
                object scalar_result = my_command_scalar.ExecuteScalar();
 
