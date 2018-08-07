@@ -14,7 +14,7 @@ public class Example1
           /* select example via ExecuteNonQuery() */
           try
           {
-               Console.WriteLine("inserting row via ExecuteNonQuery");
+               Console.WriteLine("inserting row via ExecuteNonQuery\n");
                my_connection.Open();
                string my_sql_insert = "insert into planes values(NULL, 'Boeing', @new_model, NULL)";
 
@@ -22,23 +22,35 @@ public class Example1
 
                Console.WriteLine("enter new model");
                string new_model = Console.ReadLine();
-               Console.WriteLine("entering new model " + new_model);
+               Console.WriteLine("\nentering new model " + new_model);
 
                my_command_insert.Parameters.AddWithValue("@new_model", new_model);
 
                my_command_insert.ExecuteNonQuery();
                my_connection.Close();
           }
-          catch (Exception my_insert_exception)
+          /* catch (Exception my_insert_exception) <--- that will not work; changed to following */
+          catch (MySql.Data.MySqlClient.MySqlException my_insert_exception)
           {
-               Console.WriteLine("mysql error on insert");
-               Console.WriteLine(my_insert_exception.ToString());
+               Console.WriteLine("mysql error on insert\n");
+               /* Console.WriteLine(my_insert_exception.ToString()); */
+
+               switch (my_insert_exception.Number)
+               {
+                    case 1062:
+                         Console.WriteLine("duplicate key violation.  plane not added\n");
+                         break;
+                    case 1366:
+                         Console.WriteLine("non-integer value.  plane not added\n");
+                         break;
+               }
+               my_connection.Close();
           }
 
           /* delete example via ExecuteNonQuery */
           try
           {
-               Console.WriteLine("deleting row via ExecuteNonQuery");
+               Console.WriteLine("deleting row via ExecuteNonQuery\n");
                my_connection.Open();
                string my_sql_delete = "delete from planes where id=29";
                MySqlCommand my_command_delete = new MySqlCommand(my_sql_delete, my_connection);
@@ -47,14 +59,14 @@ public class Example1
           }
           catch (Exception my_delete_exception)
           {
-               Console.WriteLine("mysql error on delete");
+               Console.WriteLine("mysql error on delete\n");
                Console.WriteLine(my_delete_exception.ToString());
           }
 
           /* reader example */
           try
           {
-               Console.WriteLine("show result set via ExecuteReader");
+               Console.WriteLine("show result set via ExecuteReader\n");
                my_connection.Open();
                string my_sql_select = "select manf, model, ts from planes order by model";
                MySqlCommand my_command_select = new MySqlCommand(my_sql_select, my_connection);
@@ -67,13 +79,13 @@ public class Example1
           }
           catch (Exception my_select_exception)
           {
-               Console.WriteLine("mysql error on select");
+               Console.WriteLine("mysql error on select\n");
                Console.WriteLine(my_select_exception.ToString());
           }
 
           try
           {
-               Console.WriteLine("retrieving number of rows via ExecuteScalar");
+               Console.WriteLine("\nretrieving number of rows via ExecuteScalar\n");
                my_connection.Open();
                string my_sql_scalar = "select count(*) from planes";
                MySqlCommand my_command_scalar = new MySqlCommand(my_sql_scalar, my_connection);
@@ -88,10 +100,10 @@ public class Example1
           }
           catch (Exception my_scalar_exception)
           {
-               Console.WriteLine("mysql error on scalar");
+               Console.WriteLine("mysql error on scalar\n");
                Console.WriteLine(my_scalar_exception.ToString());
           }
 
-          Console.WriteLine("done.  mysql closed.");
+          Console.WriteLine("done.  mysql closed.\n");
      }
 }
