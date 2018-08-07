@@ -7,8 +7,10 @@ public class Example1
 {
      public static void Main(string[] args)
      {
-
+          /* create string with database credentials */
           string my_connection_str = "server=localhost;user=mint;database=aircraft;port=3306;password=mint";
+
+          /* establish the connection */
           MySqlConnection my_connection = new MySqlConnection(my_connection_str);
 
           /* select example via ExecuteNonQuery() */
@@ -38,10 +40,12 @@ public class Example1
                switch (my_insert_exception.Number)
                {
                     case 1062:
-                         Console.WriteLine("duplicate key violation.  plane not added\n");
+                         Console.WriteLine("MySQL Error " + my_insert_exception.Number);
+                         Console.WriteLine("MySQL Error " + my_insert_exception.Message);
                          break;
                     case 1366:
-                         Console.WriteLine("non-integer value.  plane not added\n");
+                         Console.WriteLine("MySQL Error " + my_insert_exception.Number);
+                         Console.WriteLine("MySQL Error " + my_insert_exception.Message);
                          break;
                }
                my_connection.Close();
@@ -107,27 +111,41 @@ public class Example1
           /* stored procedure */
           try
           {
-               Console.WriteLine("stored procedure test");
+               Console.WriteLine("\nstored procedure test\n");
                my_connection.Open();
 
-               string my_stored_proc = "show_planes";
+               string my_stored_proc = "show_one_plane";
                MySqlCommand my_command_stored_proc = new MySqlCommand(my_stored_proc, my_connection);
                my_command_stored_proc.CommandType = CommandType.StoredProcedure;
+
+               /* parameter name must match name on input variable as defined in the stored procedure */
+               my_command_stored_proc.Parameters.AddWithValue("@plane", "757");
 
                MySqlDataReader my_stored_proc_reader = my_command_stored_proc.ExecuteReader();
 
                while (my_stored_proc_reader.Read())
                {
-                    Console.WriteLine(my_stored_proc_reader[0] + "\t" + my_stored_proc_reader[1] + "\t" + my_stored_proc_reader[2]  );
+                    Console.WriteLine(my_stored_proc_reader[0] + "\t" + my_stored_proc_reader[1] + "\t" + my_stored_proc_reader[2] + "\t" + my_stored_proc_reader[3]);
                }
+               Console.WriteLine("\n");
 
                my_connection.Close();
           }
           catch
           {
-
+               Console.WriteLine("do something");
           }
 
+          /* prepared statement example */
+          my_connection.Open();
+          MySqlCommand my_prepared_statement_command = new MySqlCommand();
+          my_prepared_statement_command.CommandText = "INSERT INTO planes(manf, model) VALUES (@manf, @model)";
+          my_prepared_statement_command.Prepare();
+          my_prepared_statement_command.Parameters.AddWithValue("@manf", "Boeing");
+          my_prepared_statement_command.Parameters.AddWithValue("@model", "747");
+          my_prepared_statement_command.ExecuteNonQuery();
+          my_connection.Close();
+          /* end of demo */
           Console.WriteLine("done.  mysql closed.\n");
      }
 }
